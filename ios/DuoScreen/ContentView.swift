@@ -4,7 +4,7 @@ struct ContentView: View {
     @StateObject private var paneA = WebStore(key: "duo.url.a")
     @StateObject private var paneB = WebStore(key: "duo.url.b")
     @AppStorage("duo.split") private var split = 0.5
-    @State private var dragOrigin: CGFloat?
+    @State private var dragSplit: CGFloat?
     @State private var snapA: UIImage?
     @State private var snapB: UIImage?
 
@@ -25,23 +25,25 @@ struct ContentView: View {
     }
 
     private func first(_ geo: GeometryProxy) -> some View {
-        BrowserView(store: paneA)
+        let s = dragSplit ?? split
+        return BrowserView(store: paneA)
             .overlay { snapA.map { Image(uiImage: $0).resizable().scaledToFill() } }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .frame(
-                width: geo.size.width > geo.size.height ? geo.size.width * split : nil,
-                height: geo.size.width > geo.size.height ? nil : geo.size.height * split
+                width: geo.size.width > geo.size.height ? geo.size.width * s : nil,
+                height: geo.size.width > geo.size.height ? nil : geo.size.height * s
             )
             .padding(6)
     }
 
     private func second(_ geo: GeometryProxy) -> some View {
-        BrowserView(store: paneB, toolbarAtTop: false)
+        let s = dragSplit ?? split
+        return BrowserView(store: paneB, toolbarAtTop: false)
             .overlay { snapB.map { Image(uiImage: $0).resizable().scaledToFill() } }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .frame(
-                width: geo.size.width > geo.size.height ? geo.size.width * (1 - split) : nil,
-                height: geo.size.width > geo.size.height ? nil : geo.size.height * (1 - split)
+                width: geo.size.width > geo.size.height ? geo.size.width * (1 - s) : nil,
+                height: geo.size.width > geo.size.height ? nil : geo.size.height * (1 - s)
             )
             .padding(6)
     }
@@ -54,29 +56,34 @@ struct ContentView: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { v in
-                        if dragOrigin == nil {
-                            dragOrigin = split
+                        if dragSplit == nil {
                             // Freeze the live webviews into snapshots for the
                             // drag — reflowing two pages per frame is the jank.
                             paneA.webView.takeSnapshot(with: nil) { img, _ in
-                                if dragOrigin != nil { snapA = img }
+                                if dragSplit != nil { snapA = img }
                             }
                             paneB.webView.takeSnapshot(with: nil) { img, _ in
-                                if dragOrigin != nil { snapB = img }
+                                if dragSplit != nil { snapB = img }
                             }
                         }
                         let delta = (landscape ? v.translation.width : v.translation.height) / axis
-                        split = min(0.85, max(0.15, (dragOrigin ?? split) + delta))
+                        dragSplit = min(0.85, max(0.15, split + delta))
                     }
-                    .onEnded { _ in
-                        dragOrigin = nil
+                    .onEnded { v in
+                        let delta = (landscape ? v.translation.width : v.translation.height) / axis
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            split = min(0.85, max(0.15, split + delta))
+                        }
+                        dragSplit = nil
                         snapA = nil
                         snapB = nil
                     }
             )
-            .onTapGesture(count: 2) {
-                withAnimation(.spring()) { split = 0.5 }
-            }
+            .simultaneousGesture(
+                TapGesture(count: 2).onEnded {
+                    withAnimation(.spring()) { split = 0.5 }
+                }
+            )
     }
 
 }
