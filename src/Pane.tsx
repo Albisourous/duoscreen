@@ -154,7 +154,7 @@ export function Pane({ url, onNavigate, toolbarAt }: PaneProps) {
   );
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden rounded-3xl bg-black">
       {url ? (
         <iframe
           ref={frameRef}

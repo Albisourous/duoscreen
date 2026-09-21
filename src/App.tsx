@@ -83,7 +83,7 @@ export default function App() {
       onPointerUp={() => setDragging(false)}
       onPointerCancel={() => setDragging(false)}
     >
-      <div style={{ flexBasis: `${split}%` }} className="min-h-0 min-w-0">
+      <div style={{ flexBasis: `${split}%` }} className="min-h-0 min-w-0 p-1.5">
         <Pane url={urls[0]} onNavigate={setUrl(0)} toolbarAt="top" />
       </div>
 
@@ -125,7 +125,7 @@ export default function App() {
         </motion.div>
       </div>
 
-      <div style={{ flexBasis: `${100 - split}%` }} className="min-h-0 min-w-0">
+      <div style={{ flexBasis: `${100 - split}%` }} className="min-h-0 min-w-0 p-1.5">
         <Pane url={urls[1]} onNavigate={setUrl(1)} toolbarAt="bottom" />
       </div>
     </div>
