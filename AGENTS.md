@@ -48,6 +48,10 @@ Two files do the work — keep it that way:
 - **manus.im** — general-purpose AI agent; use it for prototyping flows/copy and second-pass design critique of the glass UI. Not a runtime dependency — nothing in this repo calls it.
 - Keep the experience and the code simple: two panes, one divider, no routing, no state library, no backend.
 
+## Git
+
+Commits are authored as `Albisourous <43053302+Albisourous@users.noreply.github.com>` (repo + global git config already set). No agent/AI co-author trailers — plain `git commit -m` only. Push to `origin/main`.
+
 ## Gotchas
 
 - `package.json` name is still `duo-scaffold` template noise — fine, private app.
