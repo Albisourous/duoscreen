@@ -1,0 +1,19 @@
+name: DuoScreen
+options:
+  bundleIdPrefix: com.albisourous
+targets:
+  DuoScreen:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: DuoScreen
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.albisourous.duoscreen
+        INFOPLIST_FILE: DuoScreen/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1"
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"

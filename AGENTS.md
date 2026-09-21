@@ -1,8 +1,24 @@
 # DuoScreen
 
-Two browser panes on one iPhone — the iPhone Duo split-browsing experience as an installable PWA. One screen, two sites, a draggable glass divider.
+Two browser panes on one iPhone — the iPhone Duo split-browsing experience. One screen, two sites, a draggable glass divider.
 
-## Commands
+Two implementations, one product:
+
+- **`ios/`** — the real app. Native SwiftUI with two `WKWebView`s: every site loads (top-level web-view loads ignore `X-Frame-Options`, unlike iframes — this is why the web version can't fully replicate Duo). Liquid Glass via `.glassEffect()` / `.buttonStyle(.glass)` (iOS 26). **This is what gets installed.**
+- **root (web)** — Vite + React PWA prototype/demo. Works anywhere a browser does, but iframe-blocking sites won't render. No active maintenance — the iOS app is the product.
+
+## iOS app
+
+```bash
+cd ios && xcodegen        # regenerates DuoScreen.xcodeproj from project.yml
+open DuoScreen.xcodeproj  # Xcode required
+```
+
+Files: `DuoScreenApp.swift` (@main), `ContentView.swift` (split layout, drag divider, orientation via geometry — portrait stacks, landscape side-by-side), `BrowserView.swift` (WKWebView pane + glass toolbar + start page). Persistence via `@AppStorage`/`UserDefaults` (`duo.split`, `duo.url.a/b`).
+
+To install on a device: Xcode → Signing & Capabilities → pick a Personal Team (free Apple ID works, 7-day cert) → select the plugged-in iPhone → Run.
+
+## Web app commands
 
 ```bash
 npm run dev      # Vite dev server
