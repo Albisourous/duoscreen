@@ -8,6 +8,7 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
     let key: String
     @Published var urlText = ""
     @Published var failed = false
+    @Published var toolbarHidden = false
 
     static let startPage = """
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -82,8 +83,34 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
 
 struct WebView: UIViewRepresentable {
     let store: WebStore
-    func makeUIView(context _: Context) -> WKWebView { store.webView }
+
+    func makeUIView(context: Context) -> WKWebView {
+        store.webView.scrollView.delegate = context.coordinator
+        return store.webView
+    }
+
     func updateUIView(_: WKWebView, context _: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(store: store) }
+
+    /// Safari-style bar behavior: hide on scroll down, reveal on scroll up / at top.
+    final class Coordinator: NSObject, UIScrollViewDelegate {
+        let store: WebStore
+        private var lastY: CGFloat = 0
+
+        init(store: WebStore) { self.store = store }
+
+        func scrollViewDidScroll(_ sv: UIScrollView) {
+            let y = sv.contentOffset.y
+            let dy = y - lastY
+            lastY = y
+            if y <= 0 || dy < -6 {
+                store.toolbarHidden = false
+            } else if dy > 6, y > 80 {
+                store.toolbarHidden = true
+            }
+        }
+    }
 }
 
 struct BrowserView: View {
@@ -94,6 +121,9 @@ struct BrowserView: View {
         WebView(store: store)
             .overlay(alignment: toolbarAtTop ? .top : .bottom) {
                 toolbar
+                    .opacity(store.toolbarHidden ? 0 : 1)
+                    .allowsHitTesting(!store.toolbarHidden)
+                    .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
                     .padding(.horizontal, 12)
                     .padding(toolbarAtTop ? .top : .bottom, 10)
             }
