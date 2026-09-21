@@ -30,7 +30,7 @@ function normalize(input: string): string {
 /** Confirm a host resolves before loading it — else the iframe shows a dead error page. */
 async function resolves(url: string): Promise<boolean> {
   try {
-    await fetch(url, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(4000) });
+    await fetch(url, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout?.(4000) });
     return true;
   } catch {
     return false;

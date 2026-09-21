@@ -108,6 +108,12 @@ body {
     0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
+/* dvh needs a vh fallback for iOS <15.4 */
+.fill {
+  height: 100vh;
+  height: 100dvh;
+}
+
 /* While dragging the divider, iframes must not swallow pointer events. */
 .dragging iframe {
   pointer-events: none;

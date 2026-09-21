@@ -75,13 +75,17 @@ export default function App() {
     <div
       ref={containerRef}
       className={cn(
-        "relative flex h-dvh w-full bg-[#0a0a0f]",
+        "fill relative flex w-full bg-[#0a0a0f]",
         horizontal ? "flex-row" : "flex-col",
         dragging && "dragging select-none"
       )}
       onPointerMove={onMove}
       onPointerUp={() => setDragging(false)}
       onPointerCancel={() => setDragging(false)}
+      style={{
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+      }}
     >
       <div style={{ flexBasis: `${split}%` }} className="min-h-0 min-w-0 p-1.5">
         <Pane url={urls[0]} onNavigate={setUrl(0)} toolbarAt="top" />
