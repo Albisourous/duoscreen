@@ -45,6 +45,7 @@ struct ContentView: View {
             .fill(.white.opacity(0.15))
             .frame(width: landscape ? 1 : nil, height: landscape ? nil : 1)
             .overlay { handle }
+            .zIndex(1)
             .contentShape(Rectangle().inset(by: -16))
             .gesture(
                 DragGesture()

@@ -13,20 +13,11 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <body style="margin:0;min-height:100vh;display:grid;place-items:center;
     background:radial-gradient(120% 100% at 20% 0%,#1b1e3a,#0a0a0f 55%);
-    font-family:-apple-system;color:#fff">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:80%;max-width:280px">
-    <style>a{display:block;padding:12px;border-radius:14px;text-align:center;
-    color:#eee;text-decoration:none;font-size:14px;
-    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15)}</style>
-    <a href="https://google.com">Google</a>
-    <a href="https://en.m.wikipedia.org">Wikipedia</a>
-    <a href="https://news.ycombinator.com">Hacker News</a>
-    <a href="https://www.bing.com">Bing</a>
-    <a href="https://www.youtube.com">YouTube</a>
-    <a href="https://wttr.in">Weather</a>
+    font-family:-apple-system;color:#fff;text-align:center">
+    <div>
+    <div style="font-size:22px;font-weight:600;letter-spacing:-0.5px">DuoScreen</div>
+    <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,.4)">Type an address to begin</div>
     </div>
-    <p style="position:fixed;bottom:20px;width:100%;text-align:center;
-    font-size:12px;color:rgba(255,255,255,.4)">Type an address or tap a site</p>
     </body>
     """
 
@@ -66,6 +57,27 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
 
     func webView(_ wv: WKWebView, didFinish _: WKNavigation!) { failed = false }
     func webView(_ wv: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError _: Error) { failed = true }
+
+    func webView(
+        _ wv: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let url = navigationAction.request.url,
+              url.scheme == "http" || url.scheme == "https"
+        else {
+            decisionHandler(.cancel) // youtube://, itms://, tel:, mailto: — stay in-app
+            return
+        }
+        // Universal links only jump to native apps on link-activated
+        // navigations; reloading as a plain load keeps it in this pane.
+        if navigationAction.navigationType == .linkActivated {
+            decisionHandler(.cancel)
+            wv.load(navigationAction.request)
+            return
+        }
+        decisionHandler(.allow)
+    }
 }
 
 struct WebView: UIViewRepresentable {
