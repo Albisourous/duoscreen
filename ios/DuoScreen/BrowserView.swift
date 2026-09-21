@@ -119,6 +119,11 @@ struct BrowserView: View {
 
     var body: some View {
         WebView(store: store)
+            .overlay(alignment: .topTrailing) {
+                statusBar
+                    .padding(.top, 14)
+                    .padding(.trailing, 18)
+            }
             .overlay(alignment: toolbarAtTop ? .top : .bottom) {
                 toolbar
                     .opacity(store.toolbarHidden ? 0 : 1)
@@ -139,6 +144,30 @@ struct BrowserView: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .background(.black)
+    }
+
+    /// Duo detail: each screen carries its own status bar. Drawn under the
+    /// toolbar — it surfaces when the bar auto-hides on scroll.
+    private var statusBar: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { _ in
+            HStack(spacing: 4) {
+                Text(Date.now, format: .dateTime.hour().minute())
+                Image(systemName: "wifi")
+                Image(systemName: batterySymbol)
+            }
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(.white.opacity(0.75))
+        }
+    }
+
+    private var batterySymbol: String {
+        switch UIDevice.current.batteryLevel {
+        case ..<0: "battery.100"
+        case ..<0.25: "battery.25"
+        case ..<0.5: "battery.50"
+        case ..<0.75: "battery.75"
+        default: "battery.100"
+        }
     }
 
     private var toolbar: some View {
