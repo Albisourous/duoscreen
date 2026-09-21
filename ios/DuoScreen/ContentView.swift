@@ -23,38 +23,36 @@ struct ContentView: View {
             }
         }
         .background(.black)
+        .ignoresSafeArea()
+        .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
         .onAppear { UIDevice.current.isBatteryMonitoringEnabled = true }
     }
 
     private func first(_ geo: GeometryProxy) -> some View {
         let s = dragSplit ?? split
-        return BrowserView(store: paneA)
+        return BrowserView(store: paneA, insets: geo.safeAreaInsets)
             .overlay { snapA.map { Image(uiImage: $0).resizable().scaledToFill() } }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .frame(
                 width: geo.size.width > geo.size.height ? geo.size.width * s : nil,
                 height: geo.size.width > geo.size.height ? nil : geo.size.height * s
             )
-            .padding(6)
     }
 
     private func second(_ geo: GeometryProxy) -> some View {
         let s = dragSplit ?? split
-        return BrowserView(store: paneB, toolbarAtTop: false)
+        return BrowserView(store: paneB, toolbarAtTop: false, insets: geo.safeAreaInsets)
             .overlay { snapB.map { Image(uiImage: $0).resizable().scaledToFill() } }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .frame(
                 width: geo.size.width > geo.size.height ? geo.size.width * (1 - s) : nil,
                 height: geo.size.width > geo.size.height ? nil : geo.size.height * (1 - s)
             )
-            .padding(6)
     }
 
     private func divider(_ axis: CGFloat, landscape: Bool) -> some View {
         Rectangle()
-            .fill(.white.opacity(0.15))
-            .frame(width: landscape ? 1 : nil, height: landscape ? nil : 1)
+            .fill(.black)
+            .frame(width: landscape ? 3 : nil, height: landscape ? nil : 3)
             .overlay {
                 if locked {
                     Image(systemName: "lock.fill")

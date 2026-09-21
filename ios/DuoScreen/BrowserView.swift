@@ -4,7 +4,7 @@ import WebKit
 /// One browser pane: a WKWebView (any site loads — top-level loads ignore
 /// X-Frame-Options, unlike iframes) plus a floating liquid-glass toolbar.
 final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
-    let webView = WKWebView()
+    let webView: WKWebView
     let key: String
     @Published var urlText = ""
     @Published var failed = false
@@ -24,6 +24,9 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
 
     init(key: String) {
         self.key = key
+        let config = WKWebViewConfiguration()
+        config.allowsInlineMediaPlayback = true // videos play in-page, not fullscreen
+        webView = WKWebView(frame: .zero, configuration: config)
         super.init()
         webView.navigationDelegate = self
         webView.allowsBackForwardNavigationGestures = true
@@ -116,21 +119,22 @@ struct WebView: UIViewRepresentable {
 struct BrowserView: View {
     @StateObject var store: WebStore
     var toolbarAtTop = true
+    var insets = EdgeInsets()
 
     var body: some View {
         WebView(store: store)
             .overlay(alignment: .topTrailing) {
                 statusBar
-                    .padding(.top, 14)
-                    .padding(.trailing, 18)
+                    .padding(.top, insets.top + 6)
+                    .padding(.trailing, 18 + insets.trailing)
             }
             .overlay(alignment: toolbarAtTop ? .top : .bottom) {
                 toolbar
                     .opacity(store.toolbarHidden ? 0 : 1)
                     .allowsHitTesting(!store.toolbarHidden)
                     .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
-                    .padding(.horizontal, 12)
-                    .padding(toolbarAtTop ? .top : .bottom, 10)
+                    .padding(.horizontal, 12 + max(insets.leading, insets.trailing))
+                    .padding(toolbarAtTop ? .top : .bottom, (toolbarAtTop ? insets.top : insets.bottom) + 8)
             }
             .overlay(alignment: toolbarAtTop ? .top : .bottom) {
                 if store.failed {
@@ -142,7 +146,6 @@ struct BrowserView: View {
                         .padding(toolbarAtTop ? .top : .bottom, 60)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .background(.black)
     }
 
