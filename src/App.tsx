@@ -4,31 +4,47 @@ import { useEffect, useRef, useState } from "react";
 import { Pane } from "@/Pane";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "duoscreen.v1";
+const STORAGE_KEY = "duoscreen.v2";
 const MIN_SPLIT = 18;
 
 interface Saved {
   urls: [string, string];
   split: number;
-  horizontal: boolean;
 }
 
 function load(): Saved {
   try {
-    return { urls: ["", ""], split: 50, horizontal: false, ...JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") };
+    return { urls: ["", ""], split: 50, ...JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") };
   } catch {
-    return { urls: ["", ""], split: 50, horizontal: false };
+    return { urls: ["", ""], split: 50 };
   }
 }
 
+/** Portrait → stacked panes (Duo-style); landscape → side-by-side. */
+function useLandscape() {
+  const [landscape, setLandscape] = useState(
+    () => window.matchMedia("(orientation: landscape)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: landscape)");
+    const onChange = () => setLandscape(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return landscape;
+}
+
 export default function App() {
-  const [{ urls, split, horizontal }, setState] = useState<Saved>(load);
+  const [{ urls, split }, setState] = useState<Saved>(load);
+  const landscape = useLandscape();
+  const [override, setOverride] = useState<boolean | null>(null);
+  const horizontal = override ?? landscape;
   const [dragging, setDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ urls, split, horizontal }));
-  }, [urls, split, horizontal]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ urls, split }));
+  }, [urls, split]);
 
   const setUrl = (i: number) => (url: string) =>
     setState((s) => {
@@ -38,7 +54,7 @@ export default function App() {
     });
 
   const swap = () => setState((s) => ({ ...s, urls: [s.urls[1], s.urls[0]] }));
-  const rotate = () => setState((s) => ({ ...s, horizontal: !s.horizontal }));
+  const rotate = () => setOverride(!horizontal);
   const reset = () =>
     animate(split, 50, {
       type: "spring",
@@ -89,30 +105,30 @@ export default function App() {
         <motion.div
           whileTap={{ scale: 1.12 }}
           className={cn(
-            "glass glass-strong absolute flex items-center justify-center gap-1 rounded-full",
-            horizontal ? "h-16 w-9 flex-col" : "h-9 w-16"
+            "glass glass-strong absolute flex items-center justify-center gap-0.5 rounded-full",
+            horizontal ? "h-24 w-11 flex-col" : "h-11 w-24"
           )}
         >
           <button
             aria-label="Swap panes"
-            className="rounded-full p-1 text-white/70 active:text-white"
+            className="rounded-full p-1.5 text-white/70 active:text-white"
             onClick={swap}
           >
-            <SwapIcon className="size-3.5" />
+            <SwapIcon className="size-4" />
           </button>
           <button
             aria-label="Reset split"
-            className="rounded-full p-1 text-white/70 active:text-white"
+            className="rounded-full p-1.5 text-white/70 active:text-white"
             onClick={reset}
           >
-            <span className="block h-0.5 w-3.5 rounded-full bg-current" />
+            <span className="block h-0.5 w-4 rounded-full bg-current" />
           </button>
           <button
             aria-label="Rotate layout"
-            className="rounded-full p-1 text-white/70 active:text-white"
+            className="rounded-full p-1.5 text-white/70 active:text-white"
             onClick={rotate}
           >
-            <RotateIcon className="size-3.5" />
+            <RotateIcon className="size-4" />
           </button>
         </motion.div>
       </div>

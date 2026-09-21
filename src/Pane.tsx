@@ -18,14 +18,23 @@ const QUICK_SITES = [
   { name: "Example", url: "https://example.com" },
 ];
 
-/** Bare domains get https://; anything with spaces becomes a Bing search (Bing allows framing). */
+/** Bare domains get https://; anything else becomes a Bing search (Bing allows framing). */
 function normalize(input: string): string {
   const v = input.trim();
-  if (!v) return "";
   if (/^https?:\/\//i.test(v)) return v;
   if (!v.includes(" ") && (v.includes(".") || v.startsWith("localhost")))
     return `https://${v}`;
   return `https://www.bing.com/search?q=${encodeURIComponent(v)}`;
+}
+
+/** Confirm a host resolves before loading it — else the iframe shows a dead error page. */
+async function resolves(url: string): Promise<boolean> {
+  try {
+    await fetch(url, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(4000) });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 interface PaneProps {
@@ -54,7 +63,16 @@ export function Pane({ url, onNavigate, toolbarAt }: PaneProps) {
     if (prev !== undefined) onNavigate(prev);
   };
 
-  const submit = () => navigate(normalize(input));
+  const submit = async () => {
+    const v = input.trim();
+    if (!v) return;
+    const target = normalize(v);
+    navigate(
+      target.includes("bing.com/search") || (await resolves(target))
+        ? target
+        : `https://www.bing.com/search?q=${encodeURIComponent(v)}`
+    );
+  };
   const reload = () => {
     const f = frameRef.current;
     // oxlint-disable-next-line no-self-assign -- reassigning src is the cross-origin-safe iframe reload
