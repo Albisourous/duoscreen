@@ -90,8 +90,11 @@ export default function App() {
       {/* Divider */}
       <div
         className={cn(
-          "relative z-30 flex shrink-0 touch-none items-center justify-center",
-          horizontal ? "w-5 cursor-col-resize" : "h-5 cursor-row-resize"
+          "relative z-30 flex shrink-0 touch-none items-center justify-center bg-white/15",
+          "before:absolute before:content-['']",
+          horizontal
+            ? "w-px cursor-col-resize before:-inset-x-3 before:inset-y-0"
+            : "h-px cursor-row-resize before:-inset-y-3 before:inset-x-0"
         )}
         onPointerDown={(e) => {
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
