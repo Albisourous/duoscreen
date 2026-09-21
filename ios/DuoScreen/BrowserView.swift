@@ -91,22 +91,24 @@ struct BrowserView: View {
     var toolbarAtTop = true
 
     var body: some View {
-        ZStack(alignment: toolbarAtTop ? .top : .bottom) {
-            WebView(store: store)
-            toolbar
-                .padding(.horizontal, 12)
-                .padding(toolbarAtTop ? .top : .bottom, 10)
-            if store.failed {
-                Text("Couldn't reach that site")
-                    .font(.caption)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .glassEffect()
-                    .padding(toolbarAtTop ? .top : .bottom, 60)
+        WebView(store: store)
+            .overlay(alignment: toolbarAtTop ? .top : .bottom) {
+                toolbar
+                    .padding(.horizontal, 12)
+                    .padding(toolbarAtTop ? .top : .bottom, 10)
             }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .background(.black)
+            .overlay(alignment: toolbarAtTop ? .top : .bottom) {
+                if store.failed {
+                    Text("Couldn't reach that site")
+                        .font(.caption)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .glassEffect()
+                        .padding(toolbarAtTop ? .top : .bottom, 60)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(.black)
     }
 
     private var toolbar: some View {
@@ -120,6 +122,7 @@ struct BrowserView: View {
                 .submitLabel(.go)
                 .onSubmit { store.go(store.urlText) }
                 .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity)
                 .frame(height: 34)
                 .background(.black.opacity(0.3), in: .capsule)
             Button { store.home() } label: { Image(systemName: "house") }
@@ -128,6 +131,7 @@ struct BrowserView: View {
             } label: { Image(systemName: "safari") }
         }
         .buttonStyle(.glass)
+        .frame(maxWidth: .infinity)
         .padding(6)
         .glassEffect(.regular.interactive(), in: .capsule)
     }
