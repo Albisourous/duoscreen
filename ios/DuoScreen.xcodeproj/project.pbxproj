@@ -11,6 +11,7 @@
 		4F9D88FD9E9F4C0C61215570 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C29453D3CFE77011A93E686 /* Assets.xcassets */; };
 		A9FA60CCAA78308DF788EDD0 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4930B5934B9424CA4A78DD54 /* BrowserView.swift */; };
 		B7E4E5AADB3FBDCE59AA1E78 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCCDC190FA41385313A3AAD /* ContentView.swift */; };
+		C4D34AACA9C2C494F656A4B5 /* File.txt in Resources */ = {isa = PBXBuildFile; fileRef = AFE27128D8A8B5CED85531D6 /* File.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +19,7 @@
 		4930B5934B9424CA4A78DD54 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		5CCCDC190FA41385313A3AAD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A810D6FCF764B6868DC43DAF /* DuoScreen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DuoScreen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AFE27128D8A8B5CED85531D6 /* File.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = File.txt; sourceTree = "<group>"; };
 		FD20DA41988F22BEFEB196AE /* DuoScreenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoScreenApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -29,6 +31,7 @@
 				4930B5934B9424CA4A78DD54 /* BrowserView.swift */,
 				5CCCDC190FA41385313A3AAD /* ContentView.swift */,
 				FD20DA41988F22BEFEB196AE /* DuoScreenApp.swift */,
+				AFE27128D8A8B5CED85531D6 /* File.txt */,
 			);
 			path = DuoScreen;
 			sourceTree = "<group>";
@@ -79,6 +82,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					924EE78D99ED297058C1AFBC = {
+						DevelopmentTeam = Q36L58HTT5;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 3BD6FDD9A94D10896AD056A7 /* Build configuration list for PBXProject "DuoScreen" */;
@@ -106,6 +113,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F9D88FD9E9F4C0C61215570 /* Assets.xcassets in Resources */,
+				C4D34AACA9C2C494F656A4B5 /* File.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +255,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Q36L58HTT5;
 				INFOPLIST_FILE = DuoScreen/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -264,6 +274,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Q36L58HTT5;
 				INFOPLIST_FILE = DuoScreen/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
