@@ -51,4 +51,4 @@ Two files do the work — keep it that way:
 ## Gotchas
 
 - `package.json` name is still `duo-scaffold` template noise — fine, private app.
-- `iframe.contentWindow.history.back()` works cross-origin (navigation is allowed); `location.reload()` is not — reload via `iframe.src = iframe.src`.
+- `contentWindow.history` is NOT readable cross-origin — each pane keeps its own stack of committed URLs for the back button (`Pane.tsx`), so in-page link clicks aren't tracked. Reload via `iframe.src = iframe.src` (self-assign is the cross-origin-safe reload; oxlint-annotated).

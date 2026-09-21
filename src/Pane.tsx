@@ -43,13 +43,23 @@ export function Pane({ url, onNavigate, toolbarAt }: PaneProps) {
     setInput(url);
   }
 
-  const submit = () => onNavigate(normalize(input));
+  // Cross-origin frames can't expose their history, so we track committed URLs.
+  const stack = useRef<string[]>([]);
+  const navigate = (u: string) => {
+    if (url) stack.current.push(url);
+    onNavigate(u);
+  };
+  const back = () => {
+    const prev = stack.current.pop();
+    if (prev !== undefined) onNavigate(prev);
+  };
+
+  const submit = () => navigate(normalize(input));
   const reload = () => {
     const f = frameRef.current;
     // oxlint-disable-next-line no-self-assign -- reassigning src is the cross-origin-safe iframe reload
     if (f) f.src = f.src;
   };
-  const back = () => frameRef.current?.contentWindow?.history.back();
 
   const toolbar = (
     <motion.div
@@ -108,7 +118,7 @@ export function Pane({ url, onNavigate, toolbarAt }: PaneProps) {
           size="icon"
           aria-label="Clear"
           className="h-9 w-9 shrink-0 rounded-full text-white/80 hover:bg-white/10 hover:text-white"
-          onClick={() => onNavigate("")}
+          onClick={() => navigate("")}
         >
           <Home className="size-4" />
         </LiquidButton>
@@ -155,7 +165,7 @@ export function Pane({ url, onNavigate, toolbarAt }: PaneProps) {
                   <LiquidButton
                     variant="ghost"
                     className="w-full rounded-2xl border border-white/10 bg-white/5 text-[13px] text-white/85 hover:bg-white/15"
-                    onClick={() => onNavigate(s.url)}
+                    onClick={() => navigate(s.url)}
                   >
                     {s.name}
                   </LiquidButton>
