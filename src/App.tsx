@@ -1,5 +1,5 @@
 import { animate, motion } from "motion/react";
-import { ArrowLeftRight, ArrowUpDown, Columns2, Rows2 } from "lucide-react";
+import { ArrowLeftRight, ArrowUpDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Pane } from "@/Pane";
 import { cn } from "@/lib/utils";
@@ -36,9 +36,7 @@ function useLandscape() {
 
 export default function App() {
   const [{ urls, split }, setState] = useState<Saved>(load);
-  const landscape = useLandscape();
-  const [override, setOverride] = useState<boolean | null>(null);
-  const horizontal = override ?? landscape;
+  const horizontal = useLandscape();
   const [dragging, setDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +52,6 @@ export default function App() {
     });
 
   const swap = () => setState((s) => ({ ...s, urls: [s.urls[1], s.urls[0]] }));
-  const rotate = () => setOverride(!horizontal);
   const reset = () =>
     animate(split, 50, {
       type: "spring",
@@ -73,7 +70,6 @@ export default function App() {
   };
 
   const SwapIcon = horizontal ? ArrowLeftRight : ArrowUpDown;
-  const RotateIcon = horizontal ? Rows2 : Columns2;
 
   return (
     <div
@@ -106,7 +102,7 @@ export default function App() {
           whileTap={{ scale: 1.12 }}
           className={cn(
             "glass glass-strong absolute flex items-center justify-center gap-0.5 rounded-full",
-            horizontal ? "h-24 w-11 flex-col" : "h-11 w-24"
+            horizontal ? "h-16 w-10 flex-col" : "h-10 w-16"
           )}
         >
           <button
@@ -122,13 +118,6 @@ export default function App() {
             onClick={reset}
           >
             <span className="block h-0.5 w-4 rounded-full bg-current" />
-          </button>
-          <button
-            aria-label="Rotate layout"
-            className="rounded-full p-1.5 text-white/70 active:text-white"
-            onClick={rotate}
-          >
-            <RotateIcon className="size-4" />
           </button>
         </motion.div>
       </div>

@@ -24,7 +24,7 @@ npm run lint     # oxlint
 
 Two files do the work — keep it that way:
 
-- `src/App.tsx` — split container (`h-dvh`, `flex-col` portrait / `flex-row` landscape), draggable divider with glass handle (swap / reset / rotate), `localStorage` persistence under `duoscreen.v1`.
+- `src/App.tsx` — split container (`h-dvh`, `flex-col` portrait / `flex-row` landscape, driven by device orientation via `matchMedia`), draggable divider with glass handle (swap / reset), `localStorage` persistence under `duoscreen.v2`.
 - `src/Pane.tsx` — one browser pane: `<iframe>` + floating glass omnibox (back / reload / address / home / open-in-Safari) + start screen with quick-launch chips.
 
 ## iPhone notes
