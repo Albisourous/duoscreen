@@ -30,22 +30,29 @@ struct ContentView: View {
     }
 
     private func first(_ geo: GeometryProxy) -> some View {
+        let l = geo.size.width > geo.size.height
         let s = dragSplit ?? split
-        return BrowserView(store: paneA, insets: geo.safeAreaInsets)
-            .overlay { snapA.map { Image(uiImage: $0).resizable().scaledToFill() } }
-            .frame(
-                width: geo.size.width > geo.size.height ? geo.size.width * s : nil,
-                height: geo.size.width > geo.size.height ? nil : geo.size.height * s
-            )
+        return BrowserView(
+            store: paneA,
+            railEdge: l ? .leading : .trailing,
+            clearsSeam: !l,
+            insets: geo.safeAreaInsets
+        )
+        .overlay { snapA.map { Image(uiImage: $0).resizable().scaledToFill() } }
+        .frame(
+            width: l ? geo.size.width * s : nil,
+            height: l ? nil : geo.size.height * s
+        )
     }
 
     private func second(_ geo: GeometryProxy) -> some View {
+        let l = geo.size.width > geo.size.height
         let s = dragSplit ?? split
-        return BrowserView(store: paneB, toolbarAtTop: false, insets: geo.safeAreaInsets)
+        return BrowserView(store: paneB, railEdge: .trailing, insets: geo.safeAreaInsets)
             .overlay { snapB.map { Image(uiImage: $0).resizable().scaledToFill() } }
             .frame(
-                width: geo.size.width > geo.size.height ? geo.size.width * (1 - s) : nil,
-                height: geo.size.width > geo.size.height ? nil : geo.size.height * (1 - s)
+                width: l ? geo.size.width * (1 - s) : nil,
+                height: l ? nil : geo.size.height * (1 - s)
             )
     }
 

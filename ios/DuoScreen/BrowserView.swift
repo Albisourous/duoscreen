@@ -59,7 +59,10 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
         webView.loadHTMLString(Self.startPage, baseURL: nil)
     }
 
-    func webView(_ wv: WKWebView, didFinish _: WKNavigation!) { failed = false }
+    func webView(_ wv: WKWebView, didFinish _: WKNavigation!) {
+        failed = false
+        if let u = wv.url { urlText = u.absoluteString }
+    }
     func webView(_ wv: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError _: Error) { failed = true }
 
     func webView(
@@ -116,50 +119,64 @@ struct WebView: UIViewRepresentable {
     }
 }
 
+/// Duo-style chrome: a status column and button clusters ride the pane's
+/// outer edge rail; a small domain pill sits at the bottom and expands into
+/// the address field on tap.
 struct BrowserView: View {
     @StateObject var store: WebStore
-    var toolbarAtTop = true
+    var railEdge: HorizontalEdge = .trailing
+    var clearsSeam = false
     var insets = EdgeInsets()
+    @State private var editing = false
+    @FocusState private var fieldFocused: Bool
+
+    private var railPad: CGFloat { 8 + (railEdge == .leading ? insets.leading : insets.trailing) }
 
     var body: some View {
         WebView(store: store)
-            .overlay(alignment: .topTrailing) {
-                statusBar
-                    .padding(.top, insets.top + 6)
-                    .padding(.trailing, 18 + insets.trailing)
+            .overlay(alignment: railEdge == .leading ? .topLeading : .topTrailing) {
+                status
+                    .padding(.top, insets.top + 8)
+                    .padding(.horizontal, 12)
             }
-            .overlay(alignment: toolbarAtTop ? .top : .bottom) {
-                toolbar
+            .overlay(alignment: railEdge == .leading ? .leading : .trailing) {
+                controls
+                    .padding(railEdge == .leading ? .leading : .trailing, railPad)
                     .opacity(store.toolbarHidden ? 0 : 1)
                     .allowsHitTesting(!store.toolbarHidden)
                     .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
-                    .padding(.horizontal, 12 + max(insets.leading, insets.trailing))
-                    .padding(toolbarAtTop ? .top : .bottom, (toolbarAtTop ? insets.top : insets.bottom) + 8)
             }
-            .overlay(alignment: toolbarAtTop ? .top : .bottom) {
+            .overlay(alignment: .bottom) {
+                addressPill
+                    .padding(.bottom, insets.bottom + (clearsSeam ? 36 : 12))
+                    .opacity(store.toolbarHidden && !editing ? 0 : 1)
+                    .allowsHitTesting(!store.toolbarHidden || editing)
+                    .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
+            }
+            .overlay(alignment: .top) {
                 if store.failed {
                     Text("Couldn't reach that site")
                         .font(.caption)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .glassEffect()
-                        .padding(toolbarAtTop ? .top : .bottom, 60)
+                        .padding(.top, insets.top + 8)
                 }
             }
             .background(.black)
     }
 
-    /// Duo detail: each screen carries its own status bar. Drawn under the
-    /// toolbar — it surfaces when the bar auto-hides on scroll.
-    private var statusBar: some View {
+    /// Each screen carries its own status — camera dot, time, wifi, battery.
+    private var status: some View {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
-            HStack(spacing: 4) {
+            VStack(spacing: 5) {
+                Circle().fill(.black).frame(width: 14, height: 14)
                 Text(Date.now, format: .dateTime.hour().minute())
                 Image(systemName: "wifi")
                 Image(systemName: batterySymbol)
             }
             .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(.white.opacity(0.75))
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -173,28 +190,73 @@ struct BrowserView: View {
         }
     }
 
-    private var toolbar: some View {
-        HStack(spacing: 4) {
-            Button { store.webView.goBack() } label: { Image(systemName: "chevron.left") }
-            Button { store.webView.reload() } label: { Image(systemName: "arrow.clockwise") }
-            TextField("Search or enter address", text: $store.urlText)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .keyboardType(.URL)
-                .submitLabel(.go)
-                .onSubmit { store.go(store.urlText) }
-                .padding(.horizontal, 12)
-                .frame(maxWidth: .infinity)
-                .frame(height: 34)
-                .background(.black.opacity(0.3), in: .capsule)
-            Button { store.home() } label: { Image(systemName: "house") }
-            Button {
-                if let u = store.webView.url { UIApplication.shared.open(u) }
-            } label: { Image(systemName: "safari") }
+    private var controls: some View {
+        VStack {
+            Spacer()
+            VStack(spacing: 2) {
+                railIcon("chevron.left") { store.webView.goBack() }
+                railIcon("arrow.clockwise") { store.webView.reload() }
+            }
+            .padding(4)
+            .glassEffect(in: .capsule)
+            Spacer()
+            VStack(spacing: 2) {
+                railIcon("house") { store.home() }
+                railIcon("safari") {
+                    if let u = store.webView.url { UIApplication.shared.open(u) }
+                }
+            }
+            .padding(4)
+            .glassEffect(in: .capsule)
+            Spacer().frame(height: insets.bottom + 48)
         }
-        .buttonStyle(.glass)
-        .frame(maxWidth: .infinity)
-        .padding(6)
-        .glassEffect(.regular.interactive(), in: .capsule)
     }
+
+    private func railIcon(_ icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 15))
+                .frame(width: 36, height: 36)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var addressPill: some View {
+        Group {
+            if editing {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField("Search or enter address", text: $store.urlText)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                        .submitLabel(.go)
+                        .focused($fieldFocused)
+                        .onSubmit { store.go(store.urlText); editing = false }
+                    Button { editing = false } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(maxWidth: 330)
+                .glassEffect(in: .capsule)
+                .onAppear { fieldFocused = true }
+            } else {
+                Button { editing = true } label: {
+                    Label(host.isEmpty ? "Search or enter address" : host, systemImage: "magnifyingglass")
+                        .font(.callout)
+                        .lineLimit(1)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 12)
+                }
+                .buttonStyle(.plain)
+                .glassEffect(in: .capsule)
+            }
+        }
+    }
+
+    private var host: String { store.webView.url?.host() ?? "" }
 }
