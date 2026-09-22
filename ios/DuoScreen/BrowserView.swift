@@ -5,25 +5,38 @@ import WebKit
 /// X-Frame-Options, unlike iframes) plus a floating liquid-glass toolbar.
 final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
     let webView: WKWebView
-    let key: String
+    let name: String
     @Published var urlText = ""
     @Published var failed = false
     @Published var toolbarHidden = false
 
-    static let startPage = """
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <body style="margin:0;min-height:100vh;display:grid;place-items:center;
-    background:radial-gradient(120% 100% at 20% 0%,#1b1e3a,#0a0a0f 55%);
-    font-family:-apple-system;color:#fff;text-align:center">
-    <div>
-    <div style="font-size:22px;font-weight:600;letter-spacing:-0.5px">DuoScreen</div>
-    <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,.4)">Type an address to begin</div>
-    </div>
-    </body>
-    """
+    static func startPage(name: String) -> String {
+        let (demo, label): (String, String) = name == "A"
+            ? ("https://www.apple.com/iphone/", "Apple")
+            : ("https://m.youtube.com", "YouTube")
+        let hints = name == "A"
+            ? "Drag the seam to resize.<br>Double-tap to lock it, then tap the swap icon."
+            : "Swipe up hides the bar, down shows it.<br>Edge-swipe goes back. Both windows play video."
+        return """
+        <!DOCTYPE html><meta name="viewport" content="width=device-width,initial-scale=1">
+        <body style="margin:0;min-height:100vh;display:grid;place-items:center;
+        padding-bottom:110px;box-sizing:border-box;
+        background:radial-gradient(120% 100% at 20% 0%,#1b1e3a,#0a0a0f 55%);
+        font-family:-apple-system;color:#fff;text-align:center">
+        <div style="padding:0 24px">
+        <div style="font-size:22px;font-weight:600;letter-spacing:-0.5px">DuoScreen</div>
+        <div style="margin-top:6px;font-size:12px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,.35)">WINDOW \(name)</div>
+        <a href="\(demo)" style="display:inline-block;margin-top:14px;padding:11px 20px;
+        border-radius:999px;background:rgba(255,255,255,.1);color:#fff;
+        text-decoration:none;font-size:15px;font-weight:500">Try it: open \(label)</a>
+        <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.4);line-height:1.7">\(hints)</div>
+        </div>
+        </body>
+        """
+    }
 
-    init(key: String) {
-        self.key = key
+    init(name: String) {
+        self.name = name
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true // videos play in-page, not fullscreen
         webView = WKWebView(frame: .zero, configuration: config)
@@ -31,12 +44,7 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
         webView.navigationDelegate = self
         webView.allowsBackForwardNavigationGestures = true
         webView.scrollView.contentInsetAdjustmentBehavior = .never
-        if let saved = UserDefaults.standard.string(forKey: key), !saved.isEmpty {
-            urlText = saved
-            webView.load(URLRequest(url: URL(string: saved)!))
-        } else {
-            home()
-        }
+        home()
     }
 
     func go(_ raw: String) {
@@ -49,19 +57,19 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
         }
         guard let url = URL(string: v) else { return }
         urlText = v
-        UserDefaults.standard.set(v, forKey: key)
         webView.load(URLRequest(url: url))
     }
 
     func home() {
         urlText = ""
-        UserDefaults.standard.removeObject(forKey: key)
-        webView.loadHTMLString(Self.startPage, baseURL: nil)
+        webView.loadHTMLString(Self.startPage(name: name), baseURL: nil)
     }
 
     func webView(_ wv: WKWebView, didFinish _: WKNavigation!) {
         failed = false
-        if let u = wv.url { urlText = u.absoluteString }
+        // Skip about: URLs — the start page loads via about:blank and would
+        // otherwise prefill the field with "about:blank".
+        if let u = wv.url, u.scheme != "about" { urlText = u.absoluteString }
     }
     func webView(_ wv: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError _: Error) { failed = true }
 
@@ -71,7 +79,7 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
         guard let url = navigationAction.request.url,
-              url.scheme == "http" || url.scheme == "https"
+              url.scheme == "http" || url.scheme == "https" || url.scheme == "about"
         else {
             decisionHandler(.cancel) // youtube://, itms://, tel:, mailto: — stay in-app
             return
@@ -151,18 +159,20 @@ struct BrowserView: View {
     var body: some View {
         WebView(store: store)
             .overlay(alignment: .bottom) {
+                // Hidden while the seam drags (the pane is scaleEffect-squished,
+                // so live chrome would deform) or on Safari-style scroll-away.
+                let chromeHidden = resizing || (store.toolbarHidden && !editing)
                 addressBar
                     .padding(.horizontal, 10)
                     .frame(maxWidth: 420)
                     .padding(.bottom, insets.bottom + (clearsSeam ? 36 : 12))
-                    // Hidden while the seam drags: the pane is scaleEffect-
-                    // squished then, so live chrome would deform.
-                    .opacity((store.toolbarHidden || resizing) && !editing ? 0 : 1)
-                    .allowsHitTesting(!(store.toolbarHidden || resizing) || editing)
+                    .opacity(chromeHidden ? 0 : 1)
+                    .allowsHitTesting(!chromeHidden)
                     .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
+                    .onChange(of: resizing) { editing = false }
             }
             .overlay(alignment: .top) {
-                if store.failed {
+                if store.failed && !resizing {
                     Text("Couldn't reach that site")
                         .font(.caption)
                         .padding(.horizontal, 14)

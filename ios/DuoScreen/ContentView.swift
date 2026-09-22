@@ -1,12 +1,15 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var paneA = WebStore(key: "duo.url.a")
-    @StateObject private var paneB = WebStore(key: "duo.url.b")
+    @StateObject private var paneA = WebStore(name: "A")
+    @StateObject private var paneB = WebStore(name: "B")
     @AppStorage("duo.split.v2") private var split = 0.5
     @Environment(\.verticalSizeClass) private var vSize
     @State private var locked = false
+    @State private var swapped = false
     @State private var dragSplit: CGFloat?
+    @State private var snapA: UIImage?
+    @State private var snapB: UIImage?
 
     var body: some View {
         // geo.size has been observed stuck at its portrait value after rotation,
@@ -25,18 +28,41 @@ struct ContentView: View {
         // WebKit uses internally for live resize. The real frame commits once
         // on release.
         let ps = dragSplit == nil ? s : (split.isFinite ? min(1 - lo, max(lo, split)) : 0.5)
-        let kA = s / max(ps, 0.01)
-        let kB = (1 - s) / max(1 - ps, 0.01)
+        // `swapped` trades the panes' slots: the views move, so each WKWebView
+        // keeps its own page. disp/froz are pane A's display/frozen fractions.
+        let dispA = swapped ? 1 - s : s
+        let frozA = swapped ? 1 - ps : ps
+        let kA = dispA / max(frozA, 0.01)
+        let kB = (1 - dispA) / max(1 - frozA, 0.01)
         // Explicit rects, not stack sizing — a flexible WKWebView inside an
         // HStack can negotiate itself to full width and push its sibling off-screen.
         ZStack(alignment: .topLeading) {
-            pane(paneA, clearsSeam: !l, resizing: dragSplit != nil,
-                 w: l ? axis * ps : nil, h: l ? nil : axis * ps)
+            pane(paneA, clearsSeam: !l && !swapped, resizing: dragSplit != nil,
+                 w: l ? axis * frozA : nil, h: l ? nil : axis * frozA)
                 .scaleEffect(x: l ? kA : 1, y: l ? 1 : kA, anchor: .topLeading)
-            pane(paneB, resizing: dragSplit != nil,
-                 w: l ? axis * (1 - ps) : nil, h: l ? nil : axis * (1 - ps))
+                .offset(x: l && swapped ? axis * s + 3 : 0,
+                        y: !l && swapped ? axis * s + 3 : 0)
+            pane(paneB, clearsSeam: !l && swapped, resizing: dragSplit != nil,
+                 w: l ? axis * (1 - frozA) : nil, h: l ? nil : axis * (1 - frozA))
                 .scaleEffect(x: l ? kB : 1, y: l ? 1 : kB, anchor: .topLeading)
-                .offset(x: l ? axis * s + 3 : 0, y: l ? 0 : axis * s + 3)
+                .offset(x: l && !swapped ? axis * s + 3 : 0,
+                        y: !l && !swapped ? axis * s + 3 : 0)
+            // Swap cover: WKWebView blanks to white between a resize and the
+            // web content re-committing — hold the last frames over the gap.
+            if let snapA {
+                Image(uiImage: snapA).resizable()
+                    .frame(width: l ? axis * dispA : nil, height: l ? nil : axis * dispA)
+                    .offset(x: l && swapped ? axis * s + 3 : 0,
+                            y: !l && swapped ? axis * s + 3 : 0)
+                    .allowsHitTesting(false)
+            }
+            if let snapB {
+                Image(uiImage: snapB).resizable()
+                    .frame(width: l ? axis * (1 - dispA) : nil, height: l ? nil : axis * (1 - dispA))
+                    .offset(x: l && !swapped ? axis * s + 3 : 0,
+                            y: !l && !swapped ? axis * s + 3 : 0)
+                    .allowsHitTesting(false)
+            }
             // Last = topmost: the seam's ±20pt grab area must sit over both panes
             divider(axis, l)
                 .offset(x: l ? axis * s : 0, y: l ? 0 : axis * s)
@@ -74,6 +100,40 @@ struct ContentView: View {
             .frame(width: w, height: h)
     }
 
+    private var lockBadge: some View {
+        Image(systemName: "lock.fill")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.white.opacity(0.7))
+            .frame(width: 26, height: 26)
+            .glassEffect(.regular, in: .circle)
+    }
+
+    private var swapButton: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            // Capture before moving: the webviews blank to white during the
+            // resize reflow, so the snapshots cover that gap.
+            paneA.webView.takeSnapshot(with: nil) { a, _ in
+                paneB.webView.takeSnapshot(with: nil) { b, _ in
+                    snapA = a
+                    snapB = b
+                    swapped.toggle()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        snapA = nil
+                        snapB = nil
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.2.squarepath")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.7))
+                .frame(width: 26, height: 26)
+                .glassEffect(.regular, in: .circle)
+        }
+        .buttonStyle(.plain)
+    }
+
     private func divider(_ axis: CGFloat, _ l: Bool) -> some View {
         let lo = min(120 / axis, 0.4)
         // split can hold a poisoned value (NaN/inf): the display path masks it,
@@ -85,12 +145,14 @@ struct ContentView: View {
             .frame(width: l ? 3 : nil, height: l ? nil : 3)
             .overlay {
                 if locked {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .padding(7)
-                        .glassEffect(.regular, in: .circle)
-                        .transition(.scale.combined(with: .opacity))
+                    Group {
+                        if l {
+                            VStack(spacing: 6) { lockBadge; swapButton }
+                        } else {
+                            HStack(spacing: 6) { lockBadge; swapButton }
+                        }
+                    }
+                    .transition(.scale.combined(with: .opacity))
                 }
             }
             .animation(.spring(response: 0.3), value: locked)
