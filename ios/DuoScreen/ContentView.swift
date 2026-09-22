@@ -16,20 +16,17 @@ struct ContentView: View {
             let lo = min(120 / axis, 0.4) // a pane never shrinks below ~120pt
             let raw = dragSplit ?? split
             let s = raw.isFinite ? min(1 - lo, max(lo, raw)) : 0.5
-            Group {
-                if l {
-                    HStack(spacing: 0) {
-                        pane(paneA, snap: snapA, railEdge: .leading, w: axis * s)
-                        divider(axis, l)
-                        pane(paneB, snap: snapB, railEdge: .trailing, w: axis * (1 - s))
-                    }
-                } else {
-                    VStack(spacing: 0) {
-                        pane(paneA, snap: snapA, railEdge: .trailing, clearsSeam: true, h: axis * s)
-                        divider(axis, l)
-                        pane(paneB, snap: snapB, railEdge: .trailing, h: axis * (1 - s))
-                    }
-                }
+            // Explicit rects, not stack sizing — a flexible WKWebView inside an
+            // HStack can negotiate itself to full width and push its sibling off-screen.
+            ZStack(alignment: .topLeading) {
+                pane(paneA, snap: snapA,
+                     railEdge: l ? .leading : .trailing, clearsSeam: !l,
+                     w: l ? axis * s : nil, h: l ? nil : axis * s)
+                divider(axis, l)
+                    .offset(x: l ? axis * s : 0, y: l ? 0 : axis * s)
+                pane(paneB, snap: snapB, railEdge: .trailing,
+                     w: l ? axis * (1 - s) : nil, h: l ? nil : axis * (1 - s))
+                    .offset(x: l ? axis * s + 3 : 0, y: l ? 0 : axis * s + 3)
             }
         }
         .background(.black)

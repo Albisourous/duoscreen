@@ -164,22 +164,12 @@ struct BrowserView: View {
     }
 
     private var controls: some View {
-        VStack {
-            Spacer()
-            VStack(spacing: 2) {
-                railIcon("chevron.left") { store.webView.goBack() }
-                railIcon("arrow.clockwise") { store.webView.reload() }
-            }
-            .padding(4)
-            .glassEffect(in: .capsule)
-            Spacer()
-            VStack(spacing: 2) {
-                railIcon("house") { store.home() }
-            }
-            .padding(4)
-            .glassEffect(in: .capsule)
-            Spacer().frame(height: insets.bottom + 48)
+        VStack(spacing: 2) {
+            railIcon("chevron.left") { store.webView.goBack() }
+            railIcon("arrow.clockwise") { store.webView.reload() }
         }
+        .padding(4)
+        .glassEffect(in: .capsule)
     }
 
     private func railIcon(_ icon: String, action: @escaping () -> Void) -> some View {
@@ -204,8 +194,13 @@ struct BrowserView: View {
                         .submitLabel(.go)
                         .focused($fieldFocused)
                         .onSubmit { store.go(store.urlText); editing = false }
-                    Button { editing = false } label: {
-                        Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary)
+                    Button {
+                        if store.urlText.isEmpty { editing = false } else { store.urlText = "" }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.tertiary)
+                            .frame(width: 30, height: 30)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }

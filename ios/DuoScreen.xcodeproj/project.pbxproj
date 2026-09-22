@@ -11,15 +11,28 @@
 		4F9D88FD9E9F4C0C61215570 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C29453D3CFE77011A93E686 /* Assets.xcassets */; };
 		A9FA60CCAA78308DF788EDD0 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4930B5934B9424CA4A78DD54 /* BrowserView.swift */; };
 		B7E4E5AADB3FBDCE59AA1E78 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCCDC190FA41385313A3AAD /* ContentView.swift */; };
+		C3EDECAFA02E49C4AEFB8835 /* DuoScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E1A78268DBC2B9C2897E237 /* DuoScreenUITests.swift */; };
 		C4D34AACA9C2C494F656A4B5 /* File.txt in Resources */ = {isa = PBXBuildFile; fileRef = AFE27128D8A8B5CED85531D6 /* File.txt */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4E37117DA721A1F7875E83D4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 01FC30359BE1E9F6F40EC866 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 924EE78D99ED297058C1AFBC;
+			remoteInfo = DuoScreen;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		2C29453D3CFE77011A93E686 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4930B5934B9424CA4A78DD54 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		5CCCDC190FA41385313A3AAD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7E1A78268DBC2B9C2897E237 /* DuoScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoScreenUITests.swift; sourceTree = "<group>"; };
 		A810D6FCF764B6868DC43DAF /* DuoScreen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DuoScreen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFE27128D8A8B5CED85531D6 /* File.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = File.txt; sourceTree = "<group>"; };
+		DA702438537A546BD621A0F9 /* DuoScreenUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DuoScreenUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD20DA41988F22BEFEB196AE /* DuoScreenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoScreenApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -40,14 +53,24 @@
 			isa = PBXGroup;
 			children = (
 				4229A39206EB965F3EC3E141 /* DuoScreen */,
+				7EDE7D32C57D75D361FF243F /* DuoScreenUITests */,
 				9D4CA59B3DA469786BBA6BFD /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		7EDE7D32C57D75D361FF243F /* DuoScreenUITests */ = {
+			isa = PBXGroup;
+			children = (
+				7E1A78268DBC2B9C2897E237 /* DuoScreenUITests.swift */,
+			);
+			path = DuoScreenUITests;
 			sourceTree = "<group>";
 		};
 		9D4CA59B3DA469786BBA6BFD /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				A810D6FCF764B6868DC43DAF /* DuoScreen.app */,
+				DA702438537A546BD621A0F9 /* DuoScreenUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,6 +96,24 @@
 			productReference = A810D6FCF764B6868DC43DAF /* DuoScreen.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CCF196C2A573CE8D417DF467 /* DuoScreenUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0B390B41D38E2DCE91B0CEA /* Build configuration list for PBXNativeTarget "DuoScreenUITests" */;
+			buildPhases = (
+				4C0411523E9ECE37A7993A53 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6CDB5B3CAB58FC596887417C /* PBXTargetDependency */,
+			);
+			name = DuoScreenUITests;
+			packageProductDependencies = (
+			);
+			productName = DuoScreenUITests;
+			productReference = DA702438537A546BD621A0F9 /* DuoScreenUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -85,6 +126,9 @@
 					924EE78D99ED297058C1AFBC = {
 						DevelopmentTeam = Q36L58HTT5;
 						ProvisioningStyle = Automatic;
+					};
+					CCF196C2A573CE8D417DF467 = {
+						TestTargetID = 924EE78D99ED297058C1AFBC;
 					};
 				};
 			};
@@ -103,6 +147,7 @@
 			projectRoot = "";
 			targets = (
 				924EE78D99ED297058C1AFBC /* DuoScreen */,
+				CCF196C2A573CE8D417DF467 /* DuoScreenUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -120,6 +165,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4C0411523E9ECE37A7993A53 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C3EDECAFA02E49C4AEFB8835 /* DuoScreenUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		719DCC98C4D0214BB74A5F0A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -131,6 +184,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6CDB5B3CAB58FC596887417C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 924EE78D99ED297058C1AFBC /* DuoScreen */;
+			targetProxy = 4E37117DA721A1F7875E83D4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		019785A8A8A405AE9B12C31A /* Release */ = {
@@ -185,6 +246,23 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		055A3FC8F9F9261ACF4E3BC8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.albisourous.DuoScreenUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DuoScreen;
 			};
 			name = Release;
 		};
@@ -250,6 +328,23 @@
 			};
 			name = Debug;
 		};
+		7D9D590B774E51748FE9A80F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.albisourous.DuoScreenUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DuoScreen;
+			};
+			name = Debug;
+		};
 		9AECF8DBF1DFDFB18F77A7D2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -305,6 +400,15 @@
 			buildConfigurations = (
 				9AECF8DBF1DFDFB18F77A7D2 /* Debug */,
 				B13D62DDAC3A3C43FF5D08FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D0B390B41D38E2DCE91B0CEA /* Build configuration list for PBXNativeTarget "DuoScreenUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D9D590B774E51748FE9A80F /* Debug */,
+				055A3FC8F9F9261ACF4E3BC8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
