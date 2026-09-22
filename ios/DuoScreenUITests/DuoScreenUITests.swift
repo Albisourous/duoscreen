@@ -12,6 +12,34 @@ final class DuoScreenUITests: XCTestCase {
             .write(to: URL(fileURLWithPath: "/tmp/duo_landscape.png"))
     }
 
+    /// App Store screenshots: start pages, then real sites in both panes —
+    /// landscape and portrait. PNGs land in /tmp at native device resolution.
+    func testAppStoreScreenshots() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        sleep(3)
+        try XCUIScreen.main.screenshot().pngRepresentation
+            .write(to: URL(fileURLWithPath: "/tmp/asc_start.png"))
+        let urls = ["apple.com/iphone", "m.youtube.com"]
+        for url in urls {
+            // Only a pane still on the start page has the placeholder pill.
+            app.buttons.matching(NSPredicate(format: "label CONTAINS 'Search or enter address'"))
+                .element(boundBy: 0).tap()
+            let field = app.textFields.element(boundBy: 0)
+            XCTAssertTrue(field.waitForExistence(timeout: 3))
+            field.typeText(url + "\n")
+            sleep(1)
+        }
+        sleep(15)
+        try XCUIScreen.main.screenshot().pngRepresentation
+            .write(to: URL(fileURLWithPath: "/tmp/asc_landscape.png"))
+        XCUIDevice.shared.orientation = .portrait
+        sleep(4)
+        try XCUIScreen.main.screenshot().pngRepresentation
+            .write(to: URL(fileURLWithPath: "/tmp/asc_portrait.png"))
+    }
+
     /// Both panes load a video at once — screenshot proves concurrent playback.
     func testDualVideoPlayback() throws {
         let app = XCUIApplication()
