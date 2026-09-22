@@ -189,6 +189,14 @@ struct ContentView: View {
             .simultaneousGesture(
                 TapGesture(count: 2).onEnded {
                     locked.toggle()
+                    // Locking pins the app to the orientation it's in; on
+                    // unlock, re-evaluate so a device already rotated snaps
+                    // back without needing another tilt.
+                    AppDelegate.mask = locked ? (l ? .landscape : .portrait) : nil
+                    (UIApplication.shared.connectedScenes
+                        .compactMap { $0 as? UIWindowScene }.first)?
+                        .keyWindow?.rootViewController?
+                        .setNeedsUpdateOfSupportedInterfaceOrientations()
                     UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                 }
             )
