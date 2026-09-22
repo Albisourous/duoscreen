@@ -69,6 +69,7 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
 
     func webView(_ wv: WKWebView, didFinish _: WKNavigation!) {
         failed = false
+        toolbarHidden = false // fresh page always shows its chrome
         guard let u = wv.url, u.scheme != "about" else {
             // Going back can land on the raw about:blank slot with an empty
             // document — re-render the start page unless ours survived.
@@ -136,17 +137,24 @@ struct WebView: UIViewRepresentable {
 
         @objc func didPan(_ g: UIPanGestureRecognizer) {
             guard g.state == .changed else { return }
-            let v = g.velocity(in: g.view)
-            guard abs(v.y) > abs(v.x) else { return } // vertical swipes only, not edge-back
-            if v.y < -200 { store.toolbarHidden = true }   // swiping up = content moves down
-            else if v.y > 200 { store.toolbarHidden = false }
+            // Translation, not velocity: slow drags in a small pane never
+            // reach a flick threshold but are still deliberate scrolls.
+            let t = g.translation(in: g.view)
+            guard abs(t.y) > abs(t.x) else { return } // vertical swipes only, not edge-back
+            if t.y < -40 { store.toolbarHidden = true }   // dragging up = scrolling down
+            else if t.y > 40 { store.toolbarHidden = false }
         }
 
         func scrollViewDidScroll(_ sv: UIScrollView) {
             let y = sv.contentOffset.y
             let dy = y - lastY
             lastY = y
-            if y <= 0 || dy < -6 {
+            // Pages that fit the pane (Shorts' full-viewport player) emit only
+            // rubber-band events here — no real scroll — and a y<=0/dy<0 check
+            // would instantly undo the pan-driven hide. Only scrollable pages
+            // get scroll-driven chrome.
+            guard sv.contentSize.height > sv.bounds.height + 8 else { return }
+            if dy < -6 {
                 store.toolbarHidden = false
             } else if dy > 6, y > 80 {
                 store.toolbarHidden = true
