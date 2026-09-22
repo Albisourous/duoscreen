@@ -4,36 +4,47 @@ struct ContentView: View {
     @StateObject private var paneA = WebStore(key: "duo.url.a")
     @StateObject private var paneB = WebStore(key: "duo.url.b")
     @AppStorage("duo.split.v2") private var split = 0.5
+    @Environment(\.verticalSizeClass) private var vSize
     @State private var locked = false
     @State private var dragSplit: CGFloat?
     @State private var snapA: UIImage?
     @State private var snapB: UIImage?
 
     var body: some View {
-        GeometryReader { geo in
-            let l = geo.size.width > geo.size.height
-            let axis = (l ? geo.size.width : geo.size.height) - 3 // minus the seam
-            let lo = min(120 / axis, 0.4) // a pane never shrinks below ~120pt
-            let raw = dragSplit ?? split
-            let s = raw.isFinite ? min(1 - lo, max(lo, raw)) : 0.5
-            // Explicit rects, not stack sizing — a flexible WKWebView inside an
-            // HStack can negotiate itself to full width and push its sibling off-screen.
-            ZStack(alignment: .topLeading) {
-                pane(paneA, snap: snapA,
-                     railEdge: l ? .leading : .trailing, clearsSeam: !l,
-                     w: l ? axis * s : nil, h: l ? nil : axis * s)
-                pane(paneB, snap: snapB, railEdge: .trailing,
-                     w: l ? axis * (1 - s) : nil, h: l ? nil : axis * (1 - s))
-                    .offset(x: l ? axis * s + 3 : 0, y: l ? 0 : axis * s + 3)
-                // Last = topmost: the seam's ±20pt grab area must sit over both panes
-                divider(axis, l)
-                    .offset(x: l ? axis * s : 0, y: l ? 0 : axis * s)
-            }
+        // geo.size has been observed stuck at its portrait value after rotation,
+        // leaving the stacked layout inside a landscape window: pane A fills the
+        // screen and the seam + pane B sit off-screen. Scene bounds are the
+        // authoritative rotated size; verticalSizeClass triggers the re-render.
+        let size = sceneBounds
+        let l = vSize == .compact
+        let axis = max(1, (l ? size.width : size.height) - 3) // minus the seam
+        let lo = min(120 / axis, 0.4) // a pane never shrinks below ~120pt
+        let raw = dragSplit ?? split
+        let s = raw.isFinite ? min(1 - lo, max(lo, raw)) : 0.5
+        // Explicit rects, not stack sizing — a flexible WKWebView inside an
+        // HStack can negotiate itself to full width and push its sibling off-screen.
+        ZStack(alignment: .topLeading) {
+            pane(paneA, snap: snapA,
+                 railEdge: l ? .leading : .trailing, clearsSeam: !l,
+                 w: l ? axis * s : nil, h: l ? nil : axis * s)
+            pane(paneB, snap: snapB, railEdge: .trailing,
+                 w: l ? axis * (1 - s) : nil, h: l ? nil : axis * (1 - s))
+                .offset(x: l ? axis * s + 3 : 0, y: l ? 0 : axis * s + 3)
+            // Last = topmost: the seam's ±20pt grab area must sit over both panes
+            divider(axis, l)
+                .offset(x: l ? axis * s : 0, y: l ? 0 : axis * s)
         }
         .background(.black)
         .ignoresSafeArea(.container) // edge-to-edge, but still avoids the keyboard
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
+    }
+
+    /// Window-scene bounds — the authoritative rotated size. GeometryReader's
+    /// geo.size has been observed stuck at portrait inside a landscape window.
+    private var sceneBounds: CGRect {
+        (UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }.first)?.screen.bounds ?? .zero
     }
 
     /// Real device insets (Dynamic Island, home indicator). geo.safeAreaInsets
