@@ -34,6 +34,9 @@ struct ContentView: View {
             divider(axis, l)
                 .offset(x: l ? axis * s : 0, y: l ? 0 : axis * s)
         }
+        // Offsets don't expand a ZStack's bounds — without this the stack
+        // shrinks to pane A and centers, leaving black gaps and clipping pane B.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(.black)
         .ignoresSafeArea(.container) // edge-to-edge, but still avoids the keyboard
         .statusBarHidden(true)
