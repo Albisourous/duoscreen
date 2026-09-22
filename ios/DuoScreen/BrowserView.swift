@@ -125,7 +125,6 @@ struct WebView: UIViewRepresentable {
 struct BrowserView: View {
     @StateObject var store: WebStore
     var railEdge: HorizontalEdge = .trailing
-    var clearsSeam = false
     var insets = EdgeInsets()
     @State private var editing = false
     @FocusState private var fieldFocused: Bool
@@ -143,7 +142,9 @@ struct BrowserView: View {
             }
             .overlay(alignment: .bottom) {
                 addressPill
-                    .padding(.bottom, insets.bottom + (clearsSeam ? 36 : 12))
+                    .padding(.horizontal, 10)
+                    .frame(maxWidth: 330)
+                    .padding(.bottom, insets.bottom + 12)
                     .opacity(store.toolbarHidden && !editing ? 0 : 1)
                     .allowsHitTesting(!store.toolbarHidden || editing)
                     .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
@@ -209,7 +210,6 @@ struct BrowserView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .frame(maxWidth: 330)
                 .glassEffect(in: .capsule)
                 .onAppear { fieldFocused = true }
             } else {
