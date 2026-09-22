@@ -11,16 +11,14 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let w = geo.size.width - 3 // minus the seam
-            let s = dragSplit ?? split
-            HStack(spacing: 0) {
-                BrowserView(store: paneA, railEdge: .leading, insets: realInsets)
-                    .overlay { snapA.map { Image(uiImage: $0).resizable().scaledToFill() } }
-                    .frame(width: w * s)
-                divider(axis: w)
-                BrowserView(store: paneB, railEdge: .trailing, insets: realInsets)
-                    .overlay { snapB.map { Image(uiImage: $0).resizable().scaledToFill() } }
-                    .frame(width: w * (1 - s))
+            let l = geo.size.width > geo.size.height
+            let axis = (l ? geo.size.width : geo.size.height) - 3 // minus the seam
+            Group {
+                if l {
+                    HStack(spacing: 0) { first(geo); divider(axis, l); second(geo) }
+                } else {
+                    VStack(spacing: 0) { first(geo); divider(axis, l); second(geo) }
+                }
             }
         }
         .background(.black)
@@ -40,10 +38,34 @@ struct ContentView: View {
         return EdgeInsets(top: i.top, leading: i.left, bottom: i.bottom, trailing: i.right)
     }
 
-    private func divider(axis: CGFloat) -> some View {
-        Rectangle()
+    private func first(_ geo: GeometryProxy) -> some View {
+        let l = geo.size.width > geo.size.height
+        let s = dragSplit ?? split
+        let axis = (l ? geo.size.width : geo.size.height) - 3
+        return BrowserView(
+            store: paneA,
+            railEdge: l ? .leading : .trailing,
+            clearsSeam: !l,
+            insets: realInsets
+        )
+        .overlay { snapA.map { Image(uiImage: $0).resizable().scaledToFill() } }
+        .frame(width: l ? axis * s : nil, height: l ? nil : axis * s)
+    }
+
+    private func second(_ geo: GeometryProxy) -> some View {
+        let l = geo.size.width > geo.size.height
+        let s = dragSplit ?? split
+        let axis = (l ? geo.size.width : geo.size.height) - 3
+        return BrowserView(store: paneB, railEdge: .trailing, insets: realInsets)
+            .overlay { snapB.map { Image(uiImage: $0).resizable().scaledToFill() } }
+            .frame(width: l ? axis * (1 - s) : nil, height: l ? nil : axis * (1 - s))
+    }
+
+    private func divider(_ axis: CGFloat, _ l: Bool) -> some View {
+        let lo = min(120 / axis, 0.4) // a pane never shrinks below ~120pt
+        return Rectangle()
             .fill(.black)
-            .frame(width: 3)
+            .frame(width: l ? 3 : nil, height: l ? nil : 3)
             .overlay {
                 if locked {
                     Image(systemName: "lock.fill")
@@ -70,12 +92,14 @@ struct ContentView: View {
                                 if dragSplit != nil { snapB = img }
                             }
                         }
-                        dragSplit = min(0.85, max(0.15, split + v.translation.width / axis))
+                        let d = (l ? v.translation.width : v.translation.height) / axis
+                        dragSplit = min(1 - lo, max(lo, split + d))
                     }
                     .onEnded { v in
                         guard !locked else { return }
+                        let d = (l ? v.translation.width : v.translation.height) / axis
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            split = min(0.85, max(0.15, split + v.translation.width / axis))
+                            split = min(1 - lo, max(lo, split + d))
                         }
                         dragSplit = nil
                         snapA = nil

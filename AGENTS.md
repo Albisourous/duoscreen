@@ -25,7 +25,7 @@ First launch on device: Settings → General → VPN & Device Management → tru
 Three files, keep it that way:
 
 - `DuoScreenApp.swift` — `@main`, just `WindowGroup { ContentView() }`.
-- `ContentView.swift` — split layout + the seam. Always two panes **side by side** with a vertical seam — the Duo fold, in every orientation (no portrait stacking, no toggles). Divider: 3pt dark seam, `DragGesture(minimumDistance: 0)` with ±20pt invisible grab area, double-tap locks/unlocks (glass lock badge, drags ignored). During a drag, panes render as `takeSnapshot` images — reflowing two live `WKWebView`s per frame is the jank; commit to `@AppStorage("duo.split")` once on release.
+- `ContentView.swift` — split layout + the seam. Upright stacks the two panes top/bottom; landscape puts them side-by-side — the Duo fold. The seam is 3pt; a pane never shrinks below ~120pt (`lo` floor in `divider`). Keep the code minimal — delete dead code as you go. Divider: 3pt dark seam, `DragGesture(minimumDistance: 0)` with ±20pt invisible grab area, double-tap locks/unlocks (glass lock badge, drags ignored). During a drag, panes render as `takeSnapshot` images — reflowing two live `WKWebView`s per frame is the jank; commit to `@AppStorage("duo.split")` once on release.
 - `BrowserView.swift` — one pane: `WebStore` (owns the `WKWebView`, `WKNavigationDelegate`, persisted URL under `duo.url.a/b`), `WebView` (UIViewRepresentable + scroll delegate for Safari-style chrome auto-hide), `BrowserView` (edge rail + domain pill).
 
 ## Chrome conventions (Duo renders)

@@ -125,6 +125,7 @@ struct WebView: UIViewRepresentable {
 struct BrowserView: View {
     @StateObject var store: WebStore
     var railEdge: HorizontalEdge = .trailing
+    var clearsSeam = false
     var insets = EdgeInsets()
     @State private var editing = false
     @FocusState private var fieldFocused: Bool
@@ -144,7 +145,7 @@ struct BrowserView: View {
                 addressPill
                     .padding(.horizontal, 10)
                     .frame(maxWidth: 330)
-                    .padding(.bottom, insets.bottom + 12)
+                    .padding(.bottom, insets.bottom + (clearsSeam ? 36 : 12))
                     .opacity(store.toolbarHidden && !editing ? 0 : 1)
                     .allowsHitTesting(!store.toolbarHidden || editing)
                     .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
