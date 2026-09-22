@@ -1,0 +1,26 @@
+name: Swift
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Xcode project
+        run: brew install xcodegen && cd ios && xcodegen
+
+      - name: Build
+        run: xcodebuild -project ios/DuoScreen.xcodeproj -scheme DuoScreen \
+            -destination 'generic/platform=iOS Simulator' \
+            build CODE_SIGNING_ALLOWED=NO
+
+      - name: Test
+        run: xcodebuild -project ios/DuoScreen.xcodeproj -scheme DuoScreen \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            test CODE_SIGNING_ALLOWED=NO
