@@ -25,7 +25,17 @@ struct ContentView: View {
         .ignoresSafeArea(.container) // edge-to-edge, but still avoids the keyboard
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
-        .onAppear { UIDevice.current.isBatteryMonitoringEnabled = true }
+    }
+
+    /// Real device insets (Dynamic Island, home indicator). geo.safeAreaInsets
+    /// reports zero because the container ignores the safe area — read the
+    /// window's instead.
+    private var realInsets: EdgeInsets {
+        let i = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?.safeAreaInsets ?? .zero
+        return EdgeInsets(top: i.top, leading: i.left, bottom: i.bottom, trailing: i.right)
     }
 
     private func first(_ geo: GeometryProxy) -> some View {
@@ -35,7 +45,7 @@ struct ContentView: View {
             store: paneA,
             railEdge: l ? .leading : .trailing,
             clearsSeam: !l,
-            insets: geo.safeAreaInsets
+            insets: realInsets
         )
         .overlay { snapA.map { Image(uiImage: $0).resizable().scaledToFill() } }
         .frame(
@@ -47,7 +57,7 @@ struct ContentView: View {
     private func second(_ geo: GeometryProxy) -> some View {
         let l = geo.size.width > geo.size.height
         let s = dragSplit ?? split
-        return BrowserView(store: paneB, railEdge: .trailing, insets: geo.safeAreaInsets)
+        return BrowserView(store: paneB, railEdge: .trailing, insets: realInsets)
             .overlay { snapB.map { Image(uiImage: $0).resizable().scaledToFill() } }
             .frame(
                 width: l ? geo.size.width * (1 - s) : nil,

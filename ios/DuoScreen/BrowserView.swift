@@ -134,11 +134,6 @@ struct BrowserView: View {
 
     var body: some View {
         WebView(store: store)
-            .overlay(alignment: railEdge == .leading ? .topLeading : .topTrailing) {
-                status
-                    .padding(.top, insets.top + 12)
-                    .padding(railEdge == .leading ? .leading : .trailing, railPad)
-            }
             .overlay(alignment: railEdge == .leading ? .leading : .trailing) {
                 controls
                     .padding(railEdge == .leading ? .leading : .trailing, railPad)
@@ -166,33 +161,6 @@ struct BrowserView: View {
             .background(.black)
     }
 
-    /// Each screen carries its own status — camera dot, time, wifi, battery —
-    /// in a glass capsule so it stays legible over any page.
-    private var status: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { _ in
-            VStack(spacing: 5) {
-                Circle().fill(.black).frame(width: 14, height: 14)
-                Text(Date.now, format: .dateTime.hour().minute())
-                Image(systemName: "wifi")
-                Image(systemName: batterySymbol)
-            }
-            .font(.system(size: 10, weight: .medium))
-            .padding(.horizontal, 7)
-            .padding(.vertical, 10)
-            .glassEffect(in: .capsule)
-        }
-    }
-
-    private var batterySymbol: String {
-        switch UIDevice.current.batteryLevel {
-        case ..<0: "battery.100"
-        case ..<0.25: "battery.25"
-        case ..<0.5: "battery.50"
-        case ..<0.75: "battery.75"
-        default: "battery.100"
-        }
-    }
-
     private var controls: some View {
         VStack {
             Spacer()
@@ -205,9 +173,6 @@ struct BrowserView: View {
             Spacer()
             VStack(spacing: 2) {
                 railIcon("house") { store.home() }
-                railIcon("safari") {
-                    if let u = store.webView.url { UIApplication.shared.open(u) }
-                }
             }
             .padding(4)
             .glassEffect(in: .capsule)
