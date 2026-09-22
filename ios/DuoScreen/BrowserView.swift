@@ -130,14 +130,14 @@ struct BrowserView: View {
     @State private var editing = false
     @FocusState private var fieldFocused: Bool
 
-    private var railPad: CGFloat { 8 + (railEdge == .leading ? insets.leading : insets.trailing) }
+    private var railPad: CGFloat { 10 + (railEdge == .leading ? insets.leading : insets.trailing) }
 
     var body: some View {
         WebView(store: store)
             .overlay(alignment: railEdge == .leading ? .topLeading : .topTrailing) {
                 status
-                    .padding(.top, insets.top + 8)
-                    .padding(.horizontal, 12)
+                    .padding(.top, insets.top + 12)
+                    .padding(railEdge == .leading ? .leading : .trailing, railPad)
             }
             .overlay(alignment: railEdge == .leading ? .leading : .trailing) {
                 controls
@@ -166,7 +166,8 @@ struct BrowserView: View {
             .background(.black)
     }
 
-    /// Each screen carries its own status — camera dot, time, wifi, battery.
+    /// Each screen carries its own status — camera dot, time, wifi, battery —
+    /// in a glass capsule so it stays legible over any page.
     private var status: some View {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
             VStack(spacing: 5) {
@@ -176,7 +177,9 @@ struct BrowserView: View {
                 Image(systemName: batterySymbol)
             }
             .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(.secondary)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 10)
+            .glassEffect(in: .capsule)
         }
     }
 
@@ -215,8 +218,8 @@ struct BrowserView: View {
     private func railIcon(_ icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 15))
-                .frame(width: 36, height: 36)
+                .font(.system(size: 16))
+                .frame(width: 44, height: 44) // HIG minimum touch target
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)

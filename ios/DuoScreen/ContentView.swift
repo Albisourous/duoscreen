@@ -22,7 +22,7 @@ struct ContentView: View {
             }
         }
         .background(.black)
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container) // edge-to-edge, but still avoids the keyboard
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
         .onAppear { UIDevice.current.isBatteryMonitoringEnabled = true }
