@@ -47,16 +47,18 @@ struct ContentView: View {
                 .scaleEffect(x: l ? kB : 1, y: l ? 1 : kB, anchor: .topLeading)
                 .offset(x: l && !swapped ? axis * s + 3 : 0,
                         y: !l && !swapped ? axis * s + 3 : 0)
-            // Swap cover: WKWebView blanks to white between a resize and the
-            // web content re-committing — hold the last frames over the gap.
-            if let snapA {
+            // Snapshot cover: WKWebView blanks to white between a resize and
+            // the web content re-committing — hold the last frames over the
+            // gap. Gated off while dragging: stale covers would freeze over
+            // the live squish if a new drag starts inside the cover window.
+            if let snapA, dragSplit == nil {
                 Image(uiImage: snapA).resizable()
                     .frame(width: l ? axis * dispA : nil, height: l ? nil : axis * dispA)
                     .offset(x: l && swapped ? axis * s + 3 : 0,
                             y: !l && swapped ? axis * s + 3 : 0)
                     .allowsHitTesting(false)
             }
-            if let snapB {
+            if let snapB, dragSplit == nil {
                 Image(uiImage: snapB).resizable()
                     .frame(width: l ? axis * (1 - dispA) : nil, height: l ? nil : axis * (1 - dispA))
                     .offset(x: l && !swapped ? axis * s + 3 : 0,
@@ -108,22 +110,26 @@ struct ContentView: View {
             .glassEffect(.regular, in: .circle)
     }
 
+    /// Cover a pane-moving change with the last rendered frames: a resized or
+    /// relocated WKWebView blanks to white until its content re-commits.
+    private func withSnapshotCover(_ change: @escaping () -> Void) {
+        paneA.webView.takeSnapshot(with: nil) { a, _ in
+            paneB.webView.takeSnapshot(with: nil) { b, _ in
+                snapA = a
+                snapB = b
+                change()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    snapA = nil
+                    snapB = nil
+                }
+            }
+        }
+    }
+
     private var swapButton: some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            // Capture before moving: the webviews blank to white during the
-            // resize reflow, so the snapshots cover that gap.
-            paneA.webView.takeSnapshot(with: nil) { a, _ in
-                paneB.webView.takeSnapshot(with: nil) { b, _ in
-                    snapA = a
-                    snapB = b
-                    swapped.toggle()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        snapA = nil
-                        snapB = nil
-                    }
-                }
-            }
+            withSnapshotCover { swapped.toggle() }
         } label: {
             Image(systemName: "arrow.2.squarepath")
                 .font(.system(size: 10, weight: .semibold))
@@ -171,10 +177,13 @@ struct ContentView: View {
                         guard !locked else { return }
                         let d = (l ? v.translation.width : v.translation.height) / axis
                         // No settle animation: animating the frame would reflow
-                        // both pages for the whole spring. Split lands where
-                        // the finger already is — just commit it.
-                        split = min(1 - lo, max(lo, base + d))
-                        dragSplit = nil
+                        // both pages for the whole spring. Commit where the
+                        // finger already is, behind a cover so the reflow's
+                        // white gap never shows.
+                        withSnapshotCover {
+                            split = min(1 - lo, max(lo, base + d))
+                            dragSplit = nil
+                        }
                     }
             )
             .simultaneousGesture(

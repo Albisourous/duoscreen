@@ -30,7 +30,7 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
         <a href="\(demo)" style="display:inline-block;margin-top:14px;padding:11px 20px;
         border-radius:999px;background:rgba(255,255,255,.1);color:#fff;
         text-decoration:none;font-size:15px;font-weight:500">Try it: open \(label)</a>
-        <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.4);line-height:1.7">\(hints)</div>
+        <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;min-height:44px">\(hints)</div>
         </div>
         </body>
         """
@@ -177,7 +177,7 @@ struct BrowserView: View {
                     .padding(.bottom, insets.bottom + (clearsSeam ? 36 : 12))
                     .opacity(chromeHidden ? 0 : 1)
                     .allowsHitTesting(!chromeHidden)
-                    .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
+                    .animation(.easeOut(duration: 0.2), value: chromeHidden)
                     .onChange(of: resizing) { editing = false }
             }
             .overlay(alignment: .top) {
