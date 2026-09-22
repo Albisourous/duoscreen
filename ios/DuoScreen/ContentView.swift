@@ -56,6 +56,10 @@ struct ContentView: View {
 
     private func divider(_ axis: CGFloat, _ l: Bool) -> some View {
         let lo = min(120 / axis, 0.4)
+        // split can hold a poisoned value (NaN/inf): the display path masks it,
+        // but `split + d` would be NaN and every drag update would no-op.
+        // Base drags on a finite value instead — one drag heals the store.
+        let base = split.isFinite ? split : 0.5
         return Rectangle()
             .fill(.black)
             .frame(width: l ? 3 : nil, height: l ? nil : 3)
@@ -86,13 +90,13 @@ struct ContentView: View {
                             }
                         }
                         let d = (l ? v.translation.width : v.translation.height) / axis
-                        dragSplit = min(1 - lo, max(lo, split + d))
+                        dragSplit = min(1 - lo, max(lo, base + d))
                     }
                     .onEnded { v in
                         guard !locked else { return }
                         let d = (l ? v.translation.width : v.translation.height) / axis
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            split = min(1 - lo, max(lo, split + d))
+                            split = min(1 - lo, max(lo, base + d))
                         }
                         dragSplit = nil
                         snapA = nil
