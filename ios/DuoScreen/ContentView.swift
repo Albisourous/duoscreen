@@ -22,11 +22,12 @@ struct ContentView: View {
                 pane(paneA, snap: snapA,
                      railEdge: l ? .leading : .trailing, clearsSeam: !l,
                      w: l ? axis * s : nil, h: l ? nil : axis * s)
-                divider(axis, l)
-                    .offset(x: l ? axis * s : 0, y: l ? 0 : axis * s)
                 pane(paneB, snap: snapB, railEdge: .trailing,
                      w: l ? axis * (1 - s) : nil, h: l ? nil : axis * (1 - s))
                     .offset(x: l ? axis * s + 3 : 0, y: l ? 0 : axis * s + 3)
+                // Last = topmost: the seam's ±20pt grab area must sit over both panes
+                divider(axis, l)
+                    .offset(x: l ? axis * s : 0, y: l ? 0 : axis * s)
             }
         }
         .background(.black)
