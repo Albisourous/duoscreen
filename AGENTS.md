@@ -1,74 +1,59 @@
 # DuoScreen
 
-Two browser panes on one iPhone — the iPhone Duo split-browsing experience. One screen, two sites, a draggable glass divider.
+Two browser panes on one iPhone — the iPhone Duo split-browsing experience. One screen, two sites, a draggable divider. Native SwiftUI + `WKWebView`, no web/PWA variant (iframes can't replicate it — `X-Frame-Options` blocks half the web; top-level web-view loads ignore it). Keep the experience and the code simple.
 
-Two implementations, one product:
-
-- **`ios/`** — the real app. Native SwiftUI with two `WKWebView`s: every site loads (top-level web-view loads ignore `X-Frame-Options`, unlike iframes — this is why the web version can't fully replicate Duo). Liquid Glass via `.glassEffect()` / `.buttonStyle(.glass)` (iOS 26). **This is what gets installed.**
-- **root (web)** — Vite + React PWA prototype/demo. Works anywhere a browser does, but iframe-blocking sites won't render. No active maintenance — the iOS app is the product.
-
-## iOS app
+## Build & run
 
 ```bash
-cd ios && xcodegen        # regenerates DuoScreen.xcodeproj from project.yml
+cd ios && xcodegen        # regenerates DuoScreen.xcodeproj from project.yml — never edit the .xcodeproj
 open DuoScreen.xcodeproj  # Xcode required
 ```
 
-Files: `DuoScreenApp.swift` (@main), `ContentView.swift` (split layout, drag divider, orientation via geometry — portrait stacks, landscape side-by-side), `BrowserView.swift` (WKWebView pane + glass toolbar + start page). Persistence via `@AppStorage`/`UserDefaults` (`duo.split`, `duo.url.a/b`).
-
-To install on a device: Xcode → Signing & Capabilities → pick a Personal Team (free Apple ID works, 7-day cert) → select the plugged-in iPhone → Run.
-
-## Web app commands
+Device install via CLI (works once a Personal Team is set in `project.yml`):
 
 ```bash
-npm run dev      # Vite dev server
-npm run build    # tsc -b && vite build (typecheck + bundle)
-npm run lint     # oxlint
+xcodebuild -project ios/DuoScreen.xcodeproj -scheme DuoScreen \
+  -destination 'id=<device-id>' -allowProvisioningUpdates build
+xcrun devicectl device install app --device <device-id> \
+  ~/Library/Developer/Xcode/DerivedData/DuoScreen-*/Build/Products/Debug-iphoneos/DuoScreen.app
 ```
 
-## Stack
-
-- **Vite + React 19 + TypeScript** — no SSR, static PWA.
-- **Tailwind CSS v4** — via `@tailwindcss/vite`, tokens in `src/index.css` (`@theme inline` + `.dark`).
-- **shadcn/ui** — primitives in `src/components/ui/` (`button`, `card`). Registry config in `components.json`.
-- **KokonutUI** (`kokonutui.com`) — installed via the `@kokonutui` shadcn registry: `npx shadcn@latest add @kokonutui/<name>`. Currently vendored: `src/components/kokonutui/liquid-glass-card.tsx` (exports `LiquidGlassCard`, `LiquidButton`; the upstream demo/`next/image` code was removed for Vite).
-- **Motion** (`motion.dev`) — `import { motion, animate } from "motion/react"`. Used for toolbar spring-in, chip stagger, divider handle press, split reset spring.
-- **lucide-react** — icons.
-- **radix-ui** — shadcn `Button` Slot dependency.
+First launch on device: Settings → General → VPN & Device Management → trust the developer profile. Free-account signing expires after 7 days — rebuild to refresh.
 
 ## Architecture
 
-Two files do the work — keep it that way:
+Three files, keep it that way:
 
-- `src/App.tsx` — split container (`h-dvh`, `flex-col` portrait / `flex-row` landscape, driven by device orientation via `matchMedia`), draggable divider with glass handle (swap / reset), `localStorage` persistence under `duoscreen.v2`.
-- `src/Pane.tsx` — one browser pane: `<iframe>` + floating glass omnibox (back / reload / address / home / open-in-Safari) + start screen with quick-launch chips.
+- `DuoScreenApp.swift` — `@main`, just `WindowGroup { ContentView() }`.
+- `ContentView.swift` — split layout + the seam. Orientation comes from geometry only (`width > height` → side-by-side, else stacked); no manual toggle. Divider: 3pt dark seam, `DragGesture(minimumDistance: 0)` with ±20pt invisible grab area, double-tap locks/unlocks (glass lock badge, drags ignored). During a drag, panes render as `takeSnapshot` images — reflowing two live `WKWebView`s per frame is the jank; commit to `@AppStorage("duo.split")` once on release.
+- `BrowserView.swift` — one pane: `WebStore` (owns the `WKWebView`, `WKNavigationDelegate`, persisted URL under `duo.url.a/b`), `WebView` (UIViewRepresentable + scroll delegate for Safari-style chrome auto-hide), `BrowserView` (edge rail + domain pill).
 
-## iPhone notes
+## Chrome conventions (Duo renders)
 
-- `viewport-fit=cover` + `user-scalable=no` in `index.html`; safe-area insets applied inline on the toolbars (`max(env(safe-area-inset-*), 10px)`).
-- PWA: `public/manifest.webmanifest` + generated icons; `apple-mobile-web-app-capable` for fullscreen Add-to-Home-Screen.
-- While dragging the divider, `.dragging iframe { pointer-events: none }` — without it the iframes swallow the gesture.
-- **Iframe limits:** sites sending `X-Frame-Options`/`frame-ancestors` (Google, X, DDG, MDN…) refuse to render — the ↗ button opens them in Safari. Verified embeddable: Wikipedia, Hacker News, Bing (also the search fallback), wttr.in, OpenStreetMap `export/embed.html`, example.com.
+- Per-pane **edge rail** on the outer edge: status column (camera dot, time, wifi, real battery level) + glass button clusters (back/reload, home/Safari). Rail edge: leading for the left pane in landscape, trailing otherwise.
+- **Domain pill** at the bottom center shows the host; tap to expand into the address field. System status bar is hidden (`statusBarHidden`) so per-pane status is the only one.
+- Layout ignores safe area (panes flush to screen edges); all chrome pads with `geo.safeAreaInsets` passed in as `insets`.
+- Liquid Glass = real `.glassEffect()` (iOS 26). No CSS approximations, no custom blur code.
+- `allowsInlineMediaPlayback = true` — videos play in-page, never auto-fullscreen.
 
-## Liquid glass conventions
+## Navigation rules
 
-- Reusable `.glass` / `.glass-strong` utilities in `src/index.css`: translucent gradient + `backdrop-filter: blur + saturate` + specular top highlight + border. Use them for any new overlay surface.
-- Prefer KokonutUI `LiquidGlassCard`/`LiquidButton` for content surfaces; `.glass` for chrome (toolbars, handles).
-- Dark-first: `<html class="dark">`; glass reads as white-on-dark translucency. Keep backgrounds dark enough for refraction to show.
-
-## Agent tooling
-
-- **Ponytail** ([DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail)) — installed as Devin skills in `.devin/skills/` (`/ponytail`, `/ponytail-review`, `/ponytail-audit`, `/ponytail-debt`, `/ponytail-gain`, `/ponytail-help`). Its ruleset applies here: lazy senior dev — climb the ladder (does it need to exist? already in codebase? stdlib? native platform? installed dep? one line?) and stop at the first rung that holds. Never lazy about validation at trust boundaries, error handling, security, accessibility. Mark deliberate shortcuts with a `ponytail:` comment.
-- **motion.dev** — use `motion/react` primitives for animation; don't hand-roll springs or add a second animation library.
-- **kokonut.ui** — pull components via `npx shadcn@latest add @kokonutui/<name>`; strip Next.js-only code (`next/image`, `"use client"` is harmless) when vendoring. Known quirk: the shadcn CLI may create a literal `@/` directory if run before path aliases exist — move its contents into `src/` and delete it.
-- **manus.im** — general-purpose AI agent; use it for prototyping flows/copy and second-pass design critique of the glass UI. Not a runtime dependency — nothing in this repo calls it.
-- Keep the experience and the code simple: two panes, one divider, no routing, no state library, no backend.
-
-## Git
-
-Commits are authored as `Albisourous <43053302+Albisourous@users.noreply.github.com>` (repo + global git config already set). No agent/AI co-author trailers — plain `git commit -m` only. Push to `origin/main`.
+- Allow `http`/`https` only; cancel everything else (`youtube://`, `itms:`, `tel:`…).
+- `.linkActivated` navigations are cancelled and reloaded as plain loads — that's what keeps universal links (YouTube, Google, Maps) inside the pane instead of handing off to native apps.
+- Open-in-Safari is explicit user action only (rail button).
 
 ## Gotchas
 
-- `package.json` name is still `duo-scaffold` template noise — fine, private app.
-- `contentWindow.history` is NOT readable cross-origin — each pane keeps its own stack of committed URLs for the back button (`Pane.tsx`), so in-page link clicks aren't tracked. Reload via `iframe.src = iframe.src` (self-assign is the cross-origin-safe reload; oxlint-annotated).
+- `didFinish` syncs `urlText` from `webView.url` — that's what keeps the domain pill fresh after in-page link taps (webview url isn't observable directly).
+- `scrollView.contentInsetAdjustmentBehavior = .never` — chrome overlays handle insets; don't let WebKit double-apply.
+- Snapshot race: only apply `takeSnapshot` results while `dragSplit != nil`, or a stale image lands on a live pane and eats touches.
+- PWA/web prototype was deleted — it's in git history (pre-cleanup commits) if ever needed.
+
+## Agent tooling
+
+- **Ponytail** ([DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail)) — Devin skills in `.devin/skills/` (`/ponytail`, `/ponytail-review`, `/ponytail-audit`, `/ponytail-debt`, `/ponytail-gain`, `/ponytail-help`). Lazy senior dev rules apply: climb the ladder (need it? exists? stdlib? native? dep? one line?), deletion over addition, mark deliberate shortcuts with `ponytail:` comments.
+- **manus.im** — design/prototyping critique only; not a dependency, nothing calls it.
+
+## Git
+
+Commits are authored as `Albisourous <43053302+Albisourous@users.noreply.github.com>`. No agent/AI co-author trailers — plain `git commit -m` only. Push to `origin/main`.

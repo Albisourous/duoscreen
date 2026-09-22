@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct ContentView: View {
     @StateObject private var paneA = WebStore(key: "duo.url.a")
