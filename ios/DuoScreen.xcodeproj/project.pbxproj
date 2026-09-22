@@ -13,7 +13,6 @@
 		A9FA60CCAA78308DF788EDD0 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4930B5934B9424CA4A78DD54 /* BrowserView.swift */; };
 		B7E4E5AADB3FBDCE59AA1E78 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCCDC190FA41385313A3AAD /* ContentView.swift */; };
 		C3EDECAFA02E49C4AEFB8835 /* DuoScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E1A78268DBC2B9C2897E237 /* DuoScreenUITests.swift */; };
-		C4D34AACA9C2C494F656A4B5 /* File.txt in Resources */ = {isa = PBXBuildFile; fileRef = AFE27128D8A8B5CED85531D6 /* File.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,7 +32,6 @@
 		5CCCDC190FA41385313A3AAD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7E1A78268DBC2B9C2897E237 /* DuoScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoScreenUITests.swift; sourceTree = "<group>"; };
 		A810D6FCF764B6868DC43DAF /* DuoScreen.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DuoScreen.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AFE27128D8A8B5CED85531D6 /* File.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = File.txt; sourceTree = "<group>"; };
 		DA702438537A546BD621A0F9 /* DuoScreenUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DuoScreenUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD20DA41988F22BEFEB196AE /* DuoScreenApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoScreenApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -46,7 +44,6 @@
 				4930B5934B9424CA4A78DD54 /* BrowserView.swift */,
 				5CCCDC190FA41385313A3AAD /* ContentView.swift */,
 				FD20DA41988F22BEFEB196AE /* DuoScreenApp.swift */,
-				AFE27128D8A8B5CED85531D6 /* File.txt */,
 				2552A6A4C3E44980C0F611DF /* PrivacyInfo.xcprivacy */,
 			);
 			path = DuoScreen;
@@ -161,7 +158,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F9D88FD9E9F4C0C61215570 /* Assets.xcassets in Resources */,
-				C4D34AACA9C2C494F656A4B5 /* File.txt in Resources */,
 				A89519BBD080C52EB3072848 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
