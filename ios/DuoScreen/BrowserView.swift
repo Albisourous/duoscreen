@@ -92,6 +92,13 @@ struct WebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         store.webView.scrollView.delegate = context.coordinator
+        // Our own recognizer on the webview itself: the scrollview's pan gets
+        // cancelled by pages that take over touches (touch-action, JS swipe
+        // handlers — YouTube Shorts), so it can't be trusted to fire.
+        let pan = UIPanGestureRecognizer(target: context.coordinator,
+                                         action: #selector(Coordinator.didPan(_:)))
+        pan.delegate = context.coordinator
+        store.webView.addGestureRecognizer(pan)
         return store.webView
     }
 
@@ -100,11 +107,23 @@ struct WebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(store: store) }
 
     /// Safari-style bar behavior: hide on scroll down, reveal on scroll up / at top.
-    final class Coordinator: NSObject, UIScrollViewDelegate {
+    final class Coordinator: NSObject, UIScrollViewDelegate, UIGestureRecognizerDelegate {
         let store: WebStore
         private var lastY: CGFloat = 0
 
         init(store: WebStore) { self.store = store }
+
+        /// Observe alongside every other recognizer — never steal touches.
+        func gestureRecognizer(_: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer) -> Bool { true }
+
+        @objc func didPan(_ g: UIPanGestureRecognizer) {
+            guard g.state == .changed else { return }
+            let v = g.velocity(in: g.view)
+            guard abs(v.y) > abs(v.x) else { return } // vertical swipes only, not edge-back
+            if v.y < -200 { store.toolbarHidden = true }   // swiping up = content moves down
+            else if v.y > 200 { store.toolbarHidden = false }
+        }
 
         func scrollViewDidScroll(_ sv: UIScrollView) {
             let y = sv.contentOffset.y
