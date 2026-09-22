@@ -8,7 +8,7 @@
 
 Dual-screen and foldable phones sell multitasking as their headline feature — but you don't need a new device to find out if two-at-once browsing fits your life. iOS can't natively split the screen; DuoScreen fills that gap so you can experience an "iPhone Duo"-style workflow *before* you buy.
 
-![DuoScreen on iPhone — two browser panes side by side in landscape, each with its own address bar](.github/screenshot.png)
+![DuoScreen on iPhone — Apple.com in the left pane while a YouTube video plays in the right pane](.github/screenshot-video.png)
 
 ## Features
 
@@ -30,6 +30,16 @@ cd ios && xcodegen && open DuoScreen.xcodeproj
 ```
 
 In Xcode: select the **DuoScreen** target → **Signing & Capabilities** → choose your team (a free Apple ID works, 7-day cert) → plug in your iPhone → **Run**. On first launch, trust the developer profile under **Settings → General → VPN & Device Management**.
+
+## Screenshots
+
+| Browsing | Locked split | Onboarding |
+|:-:|:-:|:-:|
+| ![Side-by-side browsing — Apple.com next to a YouTube feed](.github/screenshot-browse.png) | ![Seam locked — lock badge and swap button on the divider](.github/screenshot-locked.png) | ![Each pane opens on its own explainer start page](.github/screenshot-start.png) |
+
+<p align="center">
+  <img src=".github/screenshot-portrait.png" width="360" alt="Portrait — the two panes stack top and bottom">
+</p>
 
 ## How it works
 
