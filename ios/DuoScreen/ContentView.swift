@@ -3,7 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var paneA = WebStore(key: "duo.url.a")
     @StateObject private var paneB = WebStore(key: "duo.url.b")
-    @AppStorage("duo.split") private var split = 0.5
+    @AppStorage("duo.split.v2") private var split = 0.5
     @State private var locked = false
     @State private var dragSplit: CGFloat?
     @State private var snapA: UIImage?
