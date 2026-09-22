@@ -44,7 +44,7 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
         if v.isEmpty { home(); return }
         if !v.contains("://") {
             v = v.contains(" ") || !v.contains(".")
-                ? "https://www.bing.com/search?q=\(v.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? v)"
+                ? "https://www.google.com/search?q=\(v.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? v)"
                 : "https://\(v)"
         }
         guard let url = URL(string: v) else { return }
