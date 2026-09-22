@@ -143,6 +143,7 @@ struct WebView: UIViewRepresentable {
 struct BrowserView: View {
     @StateObject var store: WebStore
     var clearsSeam = false
+    var resizing = false
     var insets = EdgeInsets()
     @State private var editing = false
     @FocusState private var fieldFocused: Bool
@@ -154,8 +155,10 @@ struct BrowserView: View {
                     .padding(.horizontal, 10)
                     .frame(maxWidth: 420)
                     .padding(.bottom, insets.bottom + (clearsSeam ? 36 : 12))
-                    .opacity(store.toolbarHidden && !editing ? 0 : 1)
-                    .allowsHitTesting(!store.toolbarHidden || editing)
+                    // Hidden while the seam drags: the pane is scaleEffect-
+                    // squished then, so live chrome would deform.
+                    .opacity((store.toolbarHidden || resizing) && !editing ? 0 : 1)
+                    .allowsHitTesting(!(store.toolbarHidden || resizing) || editing)
                     .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
             }
             .overlay(alignment: .top) {

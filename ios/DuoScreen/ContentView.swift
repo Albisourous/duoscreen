@@ -7,8 +7,6 @@ struct ContentView: View {
     @Environment(\.verticalSizeClass) private var vSize
     @State private var locked = false
     @State private var dragSplit: CGFloat?
-    @State private var snapA: UIImage?
-    @State private var snapB: UIImage?
 
     var body: some View {
         // geo.size has been observed stuck at its portrait value after rotation,
@@ -21,13 +19,23 @@ struct ContentView: View {
         let lo = min(120 / axis, 0.4) // a pane never shrinks below ~120pt
         let raw = dragSplit ?? split
         let s = raw.isFinite ? min(1 - lo, max(lo, raw)) : 0.5
+        // During a drag the webviews keep their pre-drag size and a GPU
+        // scaleEffect squish tracks the finger — resizing a WKWebView reflows
+        // the whole page (the jank), a layer transform is free. Same trick
+        // WebKit uses internally for live resize. The real frame commits once
+        // on release.
+        let ps = dragSplit == nil ? s : (split.isFinite ? min(1 - lo, max(lo, split)) : 0.5)
+        let kA = s / max(ps, 0.01)
+        let kB = (1 - s) / max(1 - ps, 0.01)
         // Explicit rects, not stack sizing — a flexible WKWebView inside an
         // HStack can negotiate itself to full width and push its sibling off-screen.
         ZStack(alignment: .topLeading) {
-            pane(paneA, snap: snapA, clearsSeam: !l,
-                 w: l ? axis * s : nil, h: l ? nil : axis * s)
-            pane(paneB, snap: snapB,
-                 w: l ? axis * (1 - s) : nil, h: l ? nil : axis * (1 - s))
+            pane(paneA, clearsSeam: !l, resizing: dragSplit != nil,
+                 w: l ? axis * ps : nil, h: l ? nil : axis * ps)
+                .scaleEffect(x: l ? kA : 1, y: l ? 1 : kA, anchor: .topLeading)
+            pane(paneB, resizing: dragSplit != nil,
+                 w: l ? axis * (1 - ps) : nil, h: l ? nil : axis * (1 - ps))
+                .scaleEffect(x: l ? kB : 1, y: l ? 1 : kB, anchor: .topLeading)
                 .offset(x: l ? axis * s + 3 : 0, y: l ? 0 : axis * s + 3)
             // Last = topmost: the seam's ±20pt grab area must sit over both panes
             divider(axis, l)
@@ -60,10 +68,9 @@ struct ContentView: View {
         return EdgeInsets(top: i.top, leading: i.left, bottom: i.bottom, trailing: i.right)
     }
 
-    private func pane(_ store: WebStore, snap: UIImage?,
-                      clearsSeam: Bool = false, w: CGFloat? = nil, h: CGFloat? = nil) -> some View {
-        BrowserView(store: store, clearsSeam: clearsSeam, insets: realInsets)
-            .overlay { snap.map { Image(uiImage: $0).resizable().scaledToFill() } }
+    private func pane(_ store: WebStore, clearsSeam: Bool = false, resizing: Bool = false,
+                      w: CGFloat? = nil, h: CGFloat? = nil) -> some View {
+        BrowserView(store: store, clearsSeam: clearsSeam, resizing: resizing, insets: realInsets)
             .frame(width: w, height: h)
     }
 
@@ -89,31 +96,23 @@ struct ContentView: View {
             .animation(.spring(response: 0.3), value: locked)
             .contentShape(Rectangle().inset(by: -20))
             .gesture(
-                DragGesture(minimumDistance: 0)
+                // .global: in local space the seam's own movement shifts the
+                // coordinate space mid-drag, feeding back into translation —
+                // that's the residual jitter.
+                DragGesture(minimumDistance: 0, coordinateSpace: .global)
                     .onChanged { v in
                         guard !locked else { return }
-                        if dragSplit == nil {
-                            // Freeze the live webviews into snapshots for the
-                            // drag — reflowing two pages per frame is the jank.
-                            paneA.webView.takeSnapshot(with: nil) { img, _ in
-                                if dragSplit != nil { snapA = img }
-                            }
-                            paneB.webView.takeSnapshot(with: nil) { img, _ in
-                                if dragSplit != nil { snapB = img }
-                            }
-                        }
                         let d = (l ? v.translation.width : v.translation.height) / axis
                         dragSplit = min(1 - lo, max(lo, base + d))
                     }
                     .onEnded { v in
                         guard !locked else { return }
                         let d = (l ? v.translation.width : v.translation.height) / axis
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            split = min(1 - lo, max(lo, base + d))
-                        }
+                        // No settle animation: animating the frame would reflow
+                        // both pages for the whole spring. Split lands where
+                        // the finger already is — just commit it.
+                        split = min(1 - lo, max(lo, base + d))
                         dragSplit = nil
-                        snapA = nil
-                        snapB = nil
                     }
             )
             .simultaneousGesture(
