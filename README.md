@@ -8,6 +8,8 @@
 
 Dual-screen and foldable phones sell multitasking as their headline feature — but you don't need a new device to find out if two-at-once browsing fits your life. iOS can't natively split the screen; DuoScreen fills that gap so you can experience an "iPhone Duo"-style workflow *before* you buy.
 
+![DuoScreen on iPhone — two browser panes side by side in landscape, each with its own address bar](.github/screenshot.png)
+
 ## Features
 
 - **Two websites, one screen** — fully independent browser panes, each with its own navigation, history, and media playback
