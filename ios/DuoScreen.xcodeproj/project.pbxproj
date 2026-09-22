@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0FA04FF598D6146964FD590A /* DuoScreenApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD20DA41988F22BEFEB196AE /* DuoScreenApp.swift */; };
 		4F9D88FD9E9F4C0C61215570 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2C29453D3CFE77011A93E686 /* Assets.xcassets */; };
+		A89519BBD080C52EB3072848 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2552A6A4C3E44980C0F611DF /* PrivacyInfo.xcprivacy */; };
 		A9FA60CCAA78308DF788EDD0 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4930B5934B9424CA4A78DD54 /* BrowserView.swift */; };
 		B7E4E5AADB3FBDCE59AA1E78 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCCDC190FA41385313A3AAD /* ContentView.swift */; };
 		C3EDECAFA02E49C4AEFB8835 /* DuoScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E1A78268DBC2B9C2897E237 /* DuoScreenUITests.swift */; };
@@ -26,6 +27,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2552A6A4C3E44980C0F611DF /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2C29453D3CFE77011A93E686 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4930B5934B9424CA4A78DD54 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		5CCCDC190FA41385313A3AAD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -45,6 +47,7 @@
 				5CCCDC190FA41385313A3AAD /* ContentView.swift */,
 				FD20DA41988F22BEFEB196AE /* DuoScreenApp.swift */,
 				AFE27128D8A8B5CED85531D6 /* File.txt */,
+				2552A6A4C3E44980C0F611DF /* PrivacyInfo.xcprivacy */,
 			);
 			path = DuoScreen;
 			sourceTree = "<group>";
@@ -159,6 +162,7 @@
 			files = (
 				4F9D88FD9E9F4C0C61215570 /* Assets.xcassets in Resources */,
 				C4D34AACA9C2C494F656A4B5 /* File.txt in Resources */,
+				A89519BBD080C52EB3072848 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

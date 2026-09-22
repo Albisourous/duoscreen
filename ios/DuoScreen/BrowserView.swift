@@ -9,6 +9,7 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
     @Published var urlText = ""
     @Published var failed = false
     @Published var toolbarHidden = false
+    @Published var atStart = true
 
     static func startPage(name: String) -> String {
         let (demo, label): (String, String) = name == "A"
@@ -16,10 +17,10 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
             : ("https://m.youtube.com", "YouTube")
         let hints = name == "A"
             ? "Drag the seam to resize.<br>Double-tap to lock it, then tap the swap icon."
-            : "Swipe up hides the bar, down shows it.<br>Edge-swipe goes back. Both windows play video."
+            : ""
         return """
         <!DOCTYPE html><meta name="viewport" content="width=device-width,initial-scale=1">
-        <body style="margin:0;min-height:100vh;display:grid;place-items:center;
+        <body data-duo="1" style="margin:0;min-height:100vh;display:grid;place-items:center;
         padding-bottom:110px;box-sizing:border-box;
         background:radial-gradient(120% 100% at 20% 0%,#1b1e3a,#0a0a0f 55%);
         font-family:-apple-system;color:#fff;text-align:center">
@@ -62,14 +63,22 @@ final class WebStore: NSObject, ObservableObject, WKNavigationDelegate {
 
     func home() {
         urlText = ""
+        atStart = true
         webView.loadHTMLString(Self.startPage(name: name), baseURL: nil)
     }
 
     func webView(_ wv: WKWebView, didFinish _: WKNavigation!) {
         failed = false
-        // Skip about: URLs — the start page loads via about:blank and would
-        // otherwise prefill the field with "about:blank".
-        if let u = wv.url, u.scheme != "about" { urlText = u.absoluteString }
+        guard let u = wv.url, u.scheme != "about" else {
+            // Going back can land on the raw about:blank slot with an empty
+            // document — re-render the start page unless ours survived.
+            wv.evaluateJavaScript("document.body?.dataset.duo ? 1 : 0") { r, _ in
+                if (r as? Int) == 1 { self.atStart = true } else { self.home() }
+            }
+            return
+        }
+        urlText = u.absoluteString
+        atStart = false
     }
     func webView(_ wv: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError _: Error) { failed = true }
 
@@ -222,7 +231,10 @@ struct BrowserView: View {
             } else {
                 // canGoBack isn't observable, but didFinish republishing urlText
                 // refreshes this view after every navigation — close enough.
-                barButton("chevron.left", enabled: store.webView.canGoBack) { store.webView.goBack() }
+                // No history (e.g. start page slot was replaced) → go home.
+                barButton("chevron.left", enabled: store.webView.canGoBack || !store.atStart) {
+                    if store.webView.canGoBack { store.webView.goBack() } else { store.home() }
+                }
                 Button { editing = true } label: {
                     Label(host.isEmpty ? "Search or enter address" : host, systemImage: "magnifyingglass")
                         .font(.callout)
