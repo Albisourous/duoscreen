@@ -26,12 +26,11 @@ Three files, keep it that way:
 
 - `DuoScreenApp.swift` — `@main`, just `WindowGroup { ContentView() }`.
 - `ContentView.swift` — split layout + the seam. Upright stacks the two panes top/bottom; landscape puts them side-by-side — the Duo fold. The seam is 3pt; a pane never shrinks below ~120pt (`lo` floor in `divider`). Keep the code minimal — delete dead code as you go. Divider: 3pt dark seam, `DragGesture(minimumDistance: 0)` with ±20pt invisible grab area, double-tap locks/unlocks (glass lock badge, drags ignored). During a drag, panes render as `takeSnapshot` images — reflowing two live `WKWebView`s per frame is the jank; commit to `@AppStorage("duo.split")` once on release.
-- `BrowserView.swift` — one pane: `WebStore` (owns the `WKWebView`, `WKNavigationDelegate`, persisted URL under `duo.url.a/b`), `WebView` (UIViewRepresentable + scroll delegate for Safari-style chrome auto-hide), `BrowserView` (edge rail + domain pill).
+- `BrowserView.swift` — one pane: `WebStore` (owns the `WKWebView`, `WKNavigationDelegate`, persisted URL under `duo.url.a/b`), `WebView` (UIViewRepresentable + scroll delegate for Safari-style chrome auto-hide), `BrowserView` (bottom address bar).
 
 ## Chrome conventions (Duo renders)
 
-- Per-pane **edge rail** on the outer edge: status column (camera dot, time, wifi, real battery level) + glass button clusters (back/reload, home/Safari). Rail edge: leading for the left pane in landscape, trailing otherwise.
-- **Domain pill** at the bottom center shows the host; tap to expand into the address field. System status bar is hidden (`statusBarHidden`) so per-pane status is the only one.
+- Per-pane Safari-style **bottom bar**: back, centered domain pill (tap to expand into the address field), reload — one glass capsule. Auto-hides on scroll down, reveals on scroll up / at top / while editing.
 - Layout ignores safe area (panes flush to screen edges); all chrome pads with `geo.safeAreaInsets` passed in as `insets`.
 - Liquid Glass = real `.glassEffect()` (iOS 26). No CSS approximations, no custom blur code.
 - `allowsInlineMediaPlayback = true` — videos play in-page, never auto-fullscreen.
@@ -40,7 +39,6 @@ Three files, keep it that way:
 
 - Allow `http`/`https` only; cancel everything else (`youtube://`, `itms:`, `tel:`…).
 - `.linkActivated` navigations are cancelled and reloaded as plain loads — that's what keeps universal links (YouTube, Google, Maps) inside the pane instead of handing off to native apps.
-- Open-in-Safari is explicit user action only (rail button).
 
 ## Gotchas
 

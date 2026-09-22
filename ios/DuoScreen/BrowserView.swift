@@ -119,32 +119,21 @@ struct WebView: UIViewRepresentable {
     }
 }
 
-/// Duo-style chrome: a status column and button clusters ride the pane's
-/// outer edge rail; a small domain pill sits at the bottom and expands into
-/// the address field on tap.
+/// Safari-style chrome: one bottom bar — back, domain pill (expands into the
+/// address field on tap), reload. Hides on scroll down, reveals on scroll up.
 struct BrowserView: View {
     @StateObject var store: WebStore
-    var railEdge: HorizontalEdge = .trailing
     var clearsSeam = false
     var insets = EdgeInsets()
     @State private var editing = false
     @FocusState private var fieldFocused: Bool
 
-    private var railPad: CGFloat { 10 + (railEdge == .leading ? insets.leading : insets.trailing) }
-
     var body: some View {
         WebView(store: store)
-            .overlay(alignment: railEdge == .leading ? .leading : .trailing) {
-                controls
-                    .padding(railEdge == .leading ? .leading : .trailing, railPad)
-                    .opacity(store.toolbarHidden ? 0 : 1)
-                    .allowsHitTesting(!store.toolbarHidden)
-                    .animation(.easeOut(duration: 0.2), value: store.toolbarHidden)
-            }
             .overlay(alignment: .bottom) {
-                addressPill
+                addressBar
                     .padding(.horizontal, 10)
-                    .frame(maxWidth: 330)
+                    .frame(maxWidth: 420)
                     .padding(.bottom, insets.bottom + (clearsSeam ? 36 : 12))
                     .opacity(store.toolbarHidden && !editing ? 0 : 1)
                     .allowsHitTesting(!store.toolbarHidden || editing)
@@ -163,63 +152,58 @@ struct BrowserView: View {
             .background(.black)
     }
 
-    private var controls: some View {
-        VStack(spacing: 2) {
-            railIcon("chevron.left") { store.webView.goBack() }
-            railIcon("arrow.clockwise") { store.webView.reload() }
-        }
-        .padding(4)
-        .glassEffect(in: .capsule)
-    }
-
-    private func railIcon(_ icon: String, action: @escaping () -> Void) -> some View {
+    private func barButton(_ icon: String, enabled: Bool = true, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 16))
-                .frame(width: 44, height: 44) // HIG minimum touch target
-                .contentShape(Circle())
+                .font(.system(size: 15))
+                .frame(width: 40, height: 40)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(!enabled)
+        .foregroundStyle(enabled ? .primary : .tertiary)
     }
 
-    private var addressPill: some View {
-        Group {
+    private var addressBar: some View {
+        HStack(spacing: 0) {
             if editing {
-                HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                    TextField("Search or enter address", text: $store.urlText)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                        .submitLabel(.go)
-                        .focused($fieldFocused)
-                        .onSubmit { store.go(store.urlText); editing = false }
-                    Button {
-                        if store.urlText.isEmpty { editing = false } else { store.urlText = "" }
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.tertiary)
-                            .frame(width: 30, height: 30)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 12)
+                TextField("Search or enter address", text: $store.urlText)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .keyboardType(.URL)
+                    .submitLabel(.go)
+                    .focused($fieldFocused)
+                    .onSubmit { store.go(store.urlText); editing = false }
+                    .onAppear { fieldFocused = true }
+                Button {
+                    if store.urlText.isEmpty { editing = false } else { store.urlText = "" }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 36, height: 36)
+                        .contentShape(Rectangle())
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .glassEffect(in: .capsule)
-                .onAppear { fieldFocused = true }
+                .buttonStyle(.plain)
             } else {
+                // canGoBack isn't observable, but didFinish republishing urlText
+                // refreshes this view after every navigation — close enough.
+                barButton("chevron.left", enabled: store.webView.canGoBack) { store.webView.goBack() }
                 Button { editing = true } label: {
                     Label(host.isEmpty ? "Search or enter address" : host, systemImage: "magnifyingglass")
                         .font(.callout)
                         .lineLimit(1)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
-                .glassEffect(in: .capsule)
+                barButton("arrow.clockwise") { store.webView.reload() }
             }
         }
+        .frame(height: 44)
+        .padding(4)
+        .glassEffect(in: .capsule)
     }
 
     private var host: String { store.webView.url?.host() ?? "" }

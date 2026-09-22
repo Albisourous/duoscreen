@@ -24,10 +24,9 @@ struct ContentView: View {
         // Explicit rects, not stack sizing — a flexible WKWebView inside an
         // HStack can negotiate itself to full width and push its sibling off-screen.
         ZStack(alignment: .topLeading) {
-            pane(paneA, snap: snapA,
-                 railEdge: l ? .leading : .trailing, clearsSeam: !l,
+            pane(paneA, snap: snapA, clearsSeam: !l,
                  w: l ? axis * s : nil, h: l ? nil : axis * s)
-            pane(paneB, snap: snapB, railEdge: .trailing,
+            pane(paneB, snap: snapB,
                  w: l ? axis * (1 - s) : nil, h: l ? nil : axis * (1 - s))
                 .offset(x: l ? axis * s + 3 : 0, y: l ? 0 : axis * s + 3)
             // Last = topmost: the seam's ±20pt grab area must sit over both panes
@@ -61,9 +60,9 @@ struct ContentView: View {
         return EdgeInsets(top: i.top, leading: i.left, bottom: i.bottom, trailing: i.right)
     }
 
-    private func pane(_ store: WebStore, snap: UIImage?, railEdge: HorizontalEdge,
+    private func pane(_ store: WebStore, snap: UIImage?,
                       clearsSeam: Bool = false, w: CGFloat? = nil, h: CGFloat? = nil) -> some View {
-        BrowserView(store: store, railEdge: railEdge, clearsSeam: clearsSeam, insets: realInsets)
+        BrowserView(store: store, clearsSeam: clearsSeam, insets: realInsets)
             .overlay { snap.map { Image(uiImage: $0).resizable().scaledToFill() } }
             .frame(width: w, height: h)
     }
